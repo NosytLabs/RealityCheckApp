@@ -241,3 +241,7 @@ export const useLayout = () => {
 export * from './colors';
 export * from './typography';
 export * from './spacing';
+
+// Export themes and types
+export { lightTheme, darkTheme };
+export type { Theme, ColorScheme };
