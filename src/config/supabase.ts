@@ -1,118 +1,322 @@
-import { createClient } from '@supabase/supabase-js';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Database } from '../types/database';
-import { MockSupabaseService } from './supabase-mock';
+// Supabase configuration and client setup
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://mock.supabase.co';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'mock-key';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { SUPABASE } from './constants';
+import { createMockSupabaseClient, MockSupabaseService } from './supabase-mock';
+import { Environment } from './environment';
 
-// Create Supabase client with fallback configuration
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: AsyncStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-  },
-});
-
-// Check if Supabase is available and initialize mock service if needed
-let isSupabaseAvailable = false;
-
-export const initializeSupabase = async (): Promise<boolean> => {
-  try {
-    isSupabaseAvailable = await MockSupabaseService.checkConnection();
-    if (!isSupabaseAvailable) {
-      console.warn('⚠️ Supabase not available, using mock data for development');
-    } else {
-      console.log('✅ Supabase connection established');
-    }
-    return isSupabaseAvailable;
-  } catch (error) {
-    console.error('❌ Failed to initialize Supabase:', error);
-    isSupabaseAvailable = false;
-    return false;
-  }
-};
-
-export const getSupabaseStatus = () => isSupabaseAvailable;
-export { MockSupabaseService };
-
-// Database table names (Updated for 2025 schema)
+// Database table names
 export const TABLES = {
-  PROFILES: 'profiles',
-  REALITY_CHECKS: 'reality_checks',
-  USER_STATS: 'user_stats',
-  ACHIEVEMENTS: 'achievements',
-  USER_ACHIEVEMENTS: 'user_achievements',
-  GOALS: 'goals',
-  NOTIFICATIONS: 'notifications',
-  // Legacy tables (for backward compatibility)
   USERS: 'users',
-  USER_PROFILES: 'user_profiles',
-  APP_USAGE_SESSIONS: 'app_usage_sessions',
-  SCROLL_SESSIONS: 'scroll_sessions',
   AFFIRMATIONS: 'affirmations',
   CHALLENGES: 'challenges',
-  ANALYTICS_EVENTS: 'analytics_events',
-  USER_SETTINGS: 'user_settings',
-  BLOCKED_APPS: 'blocked_apps',
-  INTERVENTION_LOGS: 'intervention_logs',
-  CONSENT_RECORDS: 'consent_records',
-  DATA_EXPORT_REQUESTS: 'data_export_requests',
-  DATA_DELETION_REQUESTS: 'data_deletion_requests',
-  AUDIT_LOGS: 'audit_logs',
+  SESSIONS: 'sessions',
+  ANALYTICS: 'analytics',
+  INTERVENTIONS: 'interventions',
+  SCREEN_TIME: 'screen_time',
+  USER_RESPONSES: 'user_responses',
 } as const;
 
-// RLS (Row Level Security) policies helper
+// Row Level Security (RLS) policies
 export const RLS_POLICIES = {
   USER_DATA: 'Users can only access their own data',
-  PUBLIC_READ: 'Public read access for reference data',
-  ADMIN_ONLY: 'Admin only access for system data',
+  PUBLIC_READ: 'Anyone can read public data',
+  AUTHENTICATED_WRITE: 'Only authenticated users can write',
 } as const;
 
-// Supabase configuration validation
-export const validateSupabaseConfig = (): boolean => {
-  return (
-    supabaseUrl !== 'https://your-project.supabase.co' &&
-    supabaseAnonKey !== 'your-anon-key' &&
-    supabaseUrl.includes('supabase.co')
-  );
-};
+// Supabase client instance
+let supabaseClient: SupabaseClient | any = null;
+let mockService: MockSupabaseService | null = null;
+let isUsingMock = false;
 
-// Test Supabase connection
-export const testSupabaseConnection = async (): Promise<boolean> => {
+// Initialize Supabase client
+const initializeSupabase = (): SupabaseClient | any => {
   try {
-    const { data, error } = await supabase
-      .from(TABLES.PROFILES)
-      .select('count')
-      .limit(1);
-    
-    return !error;
+    // Check if we have valid Supabase credentials
+    if (!SUPABASE.URL || !SUPABASE.ANON_KEY || 
+        SUPABASE.URL === 'your-supabase-url' || 
+        SUPABASE.ANON_KEY === 'your-supabase-anon-key') {
+      
+      console.warn('Supabase credentials not configured, using mock client');
+      isUsingMock = true;
+      mockService = new MockSupabaseService();
+      return createMockSupabaseClient();
+    }
+
+    // Create real Supabase client
+    const client = createClient(SUPABASE.URL, SUPABASE.ANON_KEY, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: false,
+      },
+      realtime: {
+        params: {
+          eventsPerSecond: 10,
+        },
+      },
+    });
+
+    console.log('Supabase client initialized successfully');
+    return client;
   } catch (error) {
-    console.error('Supabase connection test failed:', error);
-    return false;
+    console.error('Failed to initialize Supabase client:', error);
+    console.warn('Falling back to mock client');
+    
+    isUsingMock = true;
+    mockService = new MockSupabaseService();
+    return createMockSupabaseClient();
   }
 };
 
-// Get current user session
-export const getCurrentSession = async () => {
-  const { data: { session }, error } = await supabase.auth.getSession();
-  if (error) {
-    console.error('Error getting session:', error);
-    return null;
+// Get Supabase client (singleton)
+export const getSupabaseClient = (): SupabaseClient | any => {
+  if (!supabaseClient) {
+    supabaseClient = initializeSupabase();
   }
-  return session;
+  return supabaseClient;
 };
 
-// Get current user
-export const getCurrentUser = async () => {
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error) {
-    console.error('Error getting user:', error);
-    return null;
-  }
-  return user;
+// Check if using mock client
+export const isUsingMockClient = (): boolean => {
+  return isUsingMock;
 };
+
+// Get mock service (if available)
+export const getMockService = (): MockSupabaseService | null => {
+  return mockService;
+};
+
+// Validate Supabase connection
+export const validateSupabaseConnection = async (): Promise<{
+  isConnected: boolean;
+  isUsingMock: boolean;
+  error?: string;
+}> => {
+  try {
+    const client = getSupabaseClient();
+    
+    if (isUsingMock) {
+      const mockConnected = await mockService?.checkConnection();
+      return {
+        isConnected: mockConnected || false,
+        isUsingMock: true,
+      };
+    }
+
+    // Test real Supabase connection
+    const { data, error } = await client
+      .from(TABLES.USERS)
+      .select('id')
+      .limit(1);
+
+    if (error) {
+      return {
+        isConnected: false,
+        isUsingMock: false,
+        error: error.message,
+      };
+    }
+
+    return {
+      isConnected: true,
+      isUsingMock: false,
+    };
+  } catch (error) {
+    return {
+      isConnected: false,
+      isUsingMock: isUsingMock,
+      error: (error as Error).message,
+    };
+  }
+};
+
+// Test Supabase functionality
+export const testSupabaseFunctionality = async (): Promise<{
+  auth: boolean;
+  database: boolean;
+  storage: boolean;
+  realtime: boolean;
+  errors: string[];
+}> => {
+  const results = {
+    auth: false,
+    database: false,
+    storage: false,
+    realtime: false,
+    errors: [] as string[],
+  };
+
+  const client = getSupabaseClient();
+
+  // Test database
+  try {
+    if (isUsingMock) {
+      const testResult = await mockService?.testQuery();
+      results.database = !testResult?.error;
+    } else {
+      const { error } = await client.from(TABLES.USERS).select('id').limit(1);
+      results.database = !error;
+    }
+  } catch (error) {
+    results.errors.push(`Database: ${(error as Error).message}`);
+  }
+
+  // Test auth (basic check)
+  try {
+    if (isUsingMock) {
+      results.auth = true; // Mock auth always works
+    } else {
+      const { error } = await client.auth.getSession();
+      results.auth = !error;
+    }
+  } catch (error) {
+    results.errors.push(`Auth: ${(error as Error).message}`);
+  }
+
+  // Test storage (basic check)
+  try {
+    if (isUsingMock) {
+      results.storage = true; // Mock storage always works
+    } else {
+      const { error } = await client.storage.listBuckets();
+      results.storage = !error;
+    }
+  } catch (error) {
+    results.errors.push(`Storage: ${(error as Error).message}`);
+  }
+
+  // Test realtime (basic check)
+  try {
+    if (isUsingMock) {
+      results.realtime = true; // Mock realtime always works
+    } else {
+      // Just check if realtime is available
+      results.realtime = !!client.realtime;
+    }
+  } catch (error) {
+    results.errors.push(`Realtime: ${(error as Error).message}`);
+  }
+
+  return results;
+};
+
+// Database helper functions
+export const dbHelpers = {
+  // Generic select with filters
+  async select<T>(table: string, options: {
+    columns?: string;
+    filters?: { column: string; value: any; operator?: string }[];
+    orderBy?: { column: string; ascending?: boolean };
+    limit?: number;
+    range?: { from: number; to: number };
+  } = {}): Promise<{ data: T[] | null; error: any }> {
+    try {
+      const client = getSupabaseClient();
+      let query = client.from(table).select(options.columns || '*');
+
+      // Apply filters
+      if (options.filters) {
+        options.filters.forEach(filter => {
+          const operator = filter.operator || 'eq';
+          query = query[operator](filter.column, filter.value);
+        });
+      }
+
+      // Apply ordering
+      if (options.orderBy) {
+        query = query.order(options.orderBy.column, { 
+          ascending: options.orderBy.ascending !== false 
+        });
+      }
+
+      // Apply limit or range
+      if (options.range) {
+        query = query.range(options.range.from, options.range.to);
+      } else if (options.limit) {
+        query = query.limit(options.limit);
+      }
+
+      return await query;
+    } catch (error) {
+      return { data: null, error };
+    }
+  },
+
+  // Generic insert
+  async insert<T>(table: string, data: Partial<T> | Partial<T>[]): Promise<{ data: T | null; error: any }> {
+    try {
+      const client = getSupabaseClient();
+      return await client.from(table).insert(data).select().single();
+    } catch (error) {
+      return { data: null, error };
+    }
+  },
+
+  // Generic update
+  async update<T>(table: string, id: string, data: Partial<T>): Promise<{ data: T | null; error: any }> {
+    try {
+      const client = getSupabaseClient();
+      return await client.from(table).update(data).eq('id', id).select().single();
+    } catch (error) {
+      return { data: null, error };
+    }
+  },
+
+  // Generic delete
+  async delete(table: string, id: string): Promise<{ error: any }> {
+    try {
+      const client = getSupabaseClient();
+      return await client.from(table).delete().eq('id', id);
+    } catch (error) {
+      return { error };
+    }
+  },
+
+  // Get user data
+  async getUserData(userId: string): Promise<{ data: any | null; error: any }> {
+    return this.select('users', {
+      filters: [{ column: 'id', value: userId }],
+    });
+  },
+
+  // Get user sessions
+  async getUserSessions(userId: string, limit = 10): Promise<{ data: any[] | null; error: any }> {
+    return this.select('sessions', {
+      filters: [{ column: 'user_id', value: userId }],
+      orderBy: { column: 'created_at', ascending: false },
+      limit,
+    });
+  },
+
+  // Get user analytics
+  async getUserAnalytics(userId: string, dateRange?: { from: string; to: string }): Promise<{ data: any[] | null; error: any }> {
+    const filters = [{ column: 'user_id', value: userId }];
+    
+    if (dateRange) {
+      filters.push(
+        { column: 'created_at', value: dateRange.from, operator: 'gte' },
+        { column: 'created_at', value: dateRange.to, operator: 'lte' }
+      );
+    }
+
+    return this.select('analytics', {
+      filters,
+      orderBy: { column: 'created_at', ascending: false },
+    });
+  },
+};
+
+// Export the client for direct use
+export const supabase = getSupabaseClient();
+
+// Initialize on import if in development
+if (Environment.isDevelopment) {
+  validateSupabaseConnection().then(result => {
+    if (Environment.enableLogging) {
+      console.log('Supabase connection status:', result);
+    }
+  });
+}
 
 export default supabase;
