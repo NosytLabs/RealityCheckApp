@@ -1,24 +1,39 @@
 # Branch Deletion Script
 
-To delete branches in GitHub using the API, we need to send DELETE requests to the Git references endpoint.
+This document outlines the process for deleting branches in this repository.
 
-The correct API endpoint format is:
+## GitHub API Endpoint
+
+To delete a branch using the GitHub API, use the following endpoint:
+
 ```
 DELETE /repos/{owner}/{repo}/git/refs/heads/{branch_name}
 ```
 
 For example, to delete the 'consolidated' branch:
+
 ```
-DELETE https://api.github.com/repos/NosytLabs/RealityCheckApp/git/refs/heads/consolidated
+DELETE /repos/NosytLabs/RealityCheckApp/git/refs/heads/consolidated
 ```
 
-Branches to delete:
+## Branches to Delete
+
+The following branches will be deleted:
+
 - consolidated
 - consolidated-branch
 - master
 - temp-branch
-- temp-delete-branch
 
-Only the `main` branch will be kept.
+After deletion, only the `main` branch will remain in the repository.
 
-A successful deletion will return a 204 status code with no content in the response body.
+## Execution
+
+The branch deletion will be executed using the GitHub API with proper authentication.
+
+## Status
+
+- [ ] consolidated
+- [ ] consolidated-branch
+- [ ] master
+- [ ] temp-branch
