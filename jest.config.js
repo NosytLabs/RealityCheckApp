@@ -16,7 +16,7 @@ module.exports = {
     '!src/test-utils/**',
     '!src/**/__tests__/**',
   ],
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   testEnvironment: 'node',
