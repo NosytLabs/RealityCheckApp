@@ -4,7 +4,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { lightColors, darkColors, modernColors, ColorScheme } from './colors';
 import { textStyles, fontFamilies, fontWeights, fontSizes, lineHeights, letterSpacing } from './typography';
-import { modernTheme } from '../styles/ModernTheme';
 import { spacing, semanticSpacing, componentSpacing, borderRadius, shadows, layout, zIndex } from './spacing';
 
 // Theme interface
@@ -61,6 +60,31 @@ const darkTheme: Theme = {
   ...lightTheme,
   colors: darkColors,
   isDark: true,
+};
+
+// Define modernTheme directly using modernColors
+const modernTheme: Theme = {
+  colors: modernColors,
+  typography: {
+    textStyles,
+    fontFamilies,
+    fontWeights,
+    fontSizes,
+    lineHeights,
+    letterSpacing,
+  },
+  spacing: {
+    spacing,
+    semanticSpacing,
+    componentSpacing,
+  },
+  layout: {
+    borderRadius,
+    shadows,
+    layout,
+    zIndex,
+  },
+  isDark: false,
 };
 
 const modernThemeWithFunctions: Theme = {
