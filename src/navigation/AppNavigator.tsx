@@ -6,18 +6,18 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTheme } from '../theme';
 import { useApp } from '../providers/AppProvider';
 
-// Import screens
-import { LoginScreen } from '../screens/auth/LoginScreen';
-import { DashboardScreen } from '../screens/DashboardScreen';
+// Import screens with default imports
+import LoginScreen from '../screens/auth/LoginScreen';
+import DashboardScreen from '../screens/DashboardScreen';
 import AnalyticsScreen from '../screens/analytics/AnalyticsScreen';
-import { GoalsScreen } from '../screens/goals/GoalsScreen';
+import GoalsScreen from '../screens/goals/GoalsScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
 import EditProfileScreen from '../screens/settings/EditProfileScreen';
 import PrivacyPolicyScreen from '../screens/settings/PrivacyPolicyScreen';
 import InterventionSettingsScreen from '../screens/settings/InterventionSettingsScreen';
 import AppUsageLimitsScreen from '../screens/AppUsageLimitsScreen';
 import ScheduledDowntimeScreen from '../screens/ScheduledDowntimeScreen';
-import { RegisterScreen } from '../screens/auth/RegisterScreen';
+import RegisterScreen from '../screens/auth/RegisterScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import PremiumScreen from '../screens/PremiumScreen';
 import FocusModeScreen from '../screens/FocusModeScreen';
