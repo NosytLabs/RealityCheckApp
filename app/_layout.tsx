@@ -1,3 +1,4 @@
+import 'react-native-web';
 import Svg from 'react-native-svg';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useEffect } from 'react';
