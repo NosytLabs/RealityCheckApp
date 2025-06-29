@@ -45,6 +45,57 @@ export type Database = {
         }
         Relationships: []
       }
+      blocked_apps: {
+        Row: {
+          app_identifier: string
+          app_name: string
+          block_during_focus: boolean | null
+          block_during_offline: boolean | null
+          created_at: string | null
+          id: string
+          is_enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          app_identifier: string
+          app_name: string
+          block_during_focus?: boolean | null
+          block_during_offline?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          app_identifier?: string
+          app_name?: string
+          block_during_focus?: boolean | null
+          block_during_offline?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_apps_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocked_apps_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_stats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           content: string
@@ -289,6 +340,102 @@ export type Database = {
           },
         ]
       }
+      offline_challenges: {
+        Row: {
+          challenge_type: string | null
+          created_at: string | null
+          description: string
+          difficulty: string | null
+          duration_minutes: number
+          id: string
+          is_active: boolean | null
+          points_reward: number | null
+          requirements: Json | null
+          title: string
+        }
+        Insert: {
+          challenge_type?: string | null
+          created_at?: string | null
+          description: string
+          difficulty?: string | null
+          duration_minutes: number
+          id?: string
+          is_active?: boolean | null
+          points_reward?: number | null
+          requirements?: Json | null
+          title: string
+        }
+        Update: {
+          challenge_type?: string | null
+          created_at?: string | null
+          description?: string
+          difficulty?: string | null
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean | null
+          points_reward?: number | null
+          requirements?: Json | null
+          title?: string
+        }
+        Relationships: []
+      }
+      offline_sessions: {
+        Row: {
+          apps_blocked: string[] | null
+          created_at: string | null
+          duration_minutes: number | null
+          end_time: string | null
+          id: string
+          is_completed: boolean | null
+          notes: string | null
+          session_type: string | null
+          start_time: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          apps_blocked?: string[] | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          end_time?: string | null
+          id?: string
+          is_completed?: boolean | null
+          notes?: string | null
+          session_type?: string | null
+          start_time: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          apps_blocked?: string[] | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          end_time?: string | null
+          id?: string
+          is_completed?: boolean | null
+          notes?: string | null
+          session_type?: string | null
+          start_time?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offline_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offline_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_stats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -522,45 +669,112 @@ export type Database = {
           },
         ]
       }
+      user_offline_challenges: {
+        Row: {
+          challenge_id: string
+          completed_at: string | null
+          id: string
+          is_completed: boolean | null
+          progress: Json | null
+          started_at: string | null
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          progress?: Json | null
+          started_at?: string | null
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          progress?: Json | null
+          started_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_offline_challenges_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "offline_challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_offline_challenges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_offline_challenges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_stats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_stats: {
         Row: {
           created_at: string | null
+          current_offline_streak: number | null
           current_streak: number | null
           followers_count: number | null
           following_count: number | null
           id: string
+          last_offline_session_date: string | null
           last_reality_check_date: string | null
+          longest_offline_streak: number | null
           longest_streak: number | null
+          offline_session_count: number | null
           total_comments_received: number | null
           total_likes_received: number | null
+          total_offline_minutes: number | null
           total_reality_checks: number | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
+          current_offline_streak?: number | null
           current_streak?: number | null
           followers_count?: number | null
           following_count?: number | null
           id?: string
+          last_offline_session_date?: string | null
           last_reality_check_date?: string | null
+          longest_offline_streak?: number | null
           longest_streak?: number | null
+          offline_session_count?: number | null
           total_comments_received?: number | null
           total_likes_received?: number | null
+          total_offline_minutes?: number | null
           total_reality_checks?: number | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           created_at?: string | null
+          current_offline_streak?: number | null
           current_streak?: number | null
           followers_count?: number | null
           following_count?: number | null
           id?: string
+          last_offline_session_date?: string | null
           last_reality_check_date?: string | null
+          longest_offline_streak?: number | null
           longest_streak?: number | null
+          offline_session_count?: number | null
           total_comments_received?: number | null
           total_likes_received?: number | null
+          total_offline_minutes?: number | null
           total_reality_checks?: number | null
           updated_at?: string | null
           user_id?: string
@@ -586,27 +800,16 @@ export type Database = {
     Views: {
       user_dashboard_stats: {
         Row: {
+          achievements_count: number | null
           avatar_url: string | null
-          bio: string | null
-          created_at: string | null
           current_streak: number | null
           display_name: string | null
-          email: string | null
           followers_count: number | null
           following_count: number | null
           id: string | null
-          last_reality_check_date: string | null
           longest_streak: number | null
-          notification_settings: Json | null
-          privacy_settings: Json | null
-          status: Database["public"]["Enums"]["user_status"] | null
-          subscription_status:
-            | Database["public"]["Enums"]["subscription_status"]
-            | null
-          total_comments_received: number | null
-          total_likes_received: number | null
+          total_points: number | null
           total_reality_checks: number | null
-          updated_at: string | null
         }
         Relationships: [
           {
@@ -620,144 +823,21 @@ export type Database = {
       }
     }
     Functions: {
-      get_user_feed: {
+      setup_default_blocked_apps: {
         Args: {
-          p_user_id: string
-          p_limit?: number
-          p_offset?: number
+          target_user_id: string
         }
-        Returns: {
-          id: string
-          title: string
-          description: string | null
-          created_at: string | null
-          updated_at: string | null
-          user_id: string
-          image_url: string | null
-          is_public: boolean | null
-          mood_before: number | null
-          mood_after: number | null
-          location: Json | null
-          tags: string[] | null
-          image_analysis: Json | null
-          user_display_name: string | null
-          user_avatar_url: string | null
-          likes_count: number | null
-          comments_count: number | null
-          has_liked: boolean | null
-        }[]
-      }
-      get_user_profile: {
-        Args: {
-          p_user_id: string
-          p_viewer_id?: string
-        }
-        Returns: {
-          id: string
-          email: string
-          display_name: string | null
-          avatar_url: string | null
-          bio: string | null
-          created_at: string | null
-          updated_at: string | null
-          status: Database["public"]["Enums"]["user_status"] | null
-          subscription_status:
-            | Database["public"]["Enums"]["subscription_status"]
-            | null
-          notification_settings: Json | null
-          privacy_settings: Json | null
-          total_reality_checks: number | null
-          total_likes_received: number | null
-          total_comments_received: number | null
-          current_streak: number | null
-          longest_streak: number | null
-          last_reality_check_date: string | null
-          followers_count: number | null
-          following_count: number | null
-          is_following: boolean | null
-          is_followed_by: boolean | null
-        }
-      }
-      get_user_reality_checks: {
-        Args: {
-          p_user_id: string
-          p_viewer_id?: string
-          p_limit?: number
-          p_offset?: number
-        }
-        Returns: {
-          id: string
-          title: string
-          description: string | null
-          created_at: string | null
-          updated_at: string | null
-          user_id: string
-          image_url: string | null
-          is_public: boolean | null
-          mood_before: number | null
-          mood_after: number | null
-          location: Json | null
-          tags: string[] | null
-          image_analysis: Json | null
-          user_display_name: string | null
-          user_avatar_url: string | null
-          likes_count: number | null
-          comments_count: number | null
-          has_liked: boolean | null
-        }[]
-      }
-      search_reality_checks: {
-        Args: {
-          p_search_term: string
-          p_user_id?: string
-          p_limit?: number
-          p_offset?: number
-        }
-        Returns: {
-          id: string
-          title: string
-          description: string | null
-          created_at: string | null
-          updated_at: string | null
-          user_id: string
-          image_url: string | null
-          is_public: boolean | null
-          mood_before: number | null
-          mood_after: number | null
-          location: Json | null
-          tags: string[] | null
-          image_analysis: Json | null
-          user_display_name: string | null
-          user_avatar_url: string | null
-          likes_count: number | null
-          comments_count: number | null
-          has_liked: boolean | null
-        }[]
-      }
-      search_users: {
-        Args: {
-          p_search_term: string
-          p_current_user_id?: string
-          p_limit?: number
-          p_offset?: number
-        }
-        Returns: {
-          id: string
-          display_name: string | null
-          avatar_url: string | null
-          bio: string | null
-          total_reality_checks: number | null
-          followers_count: number | null
-          is_following: boolean | null
-        }[]
+        Returns: undefined
       }
     }
     Enums: {
-      achievement_type: "daily" | "streak" | "milestone" | "special"
-      subscription_status: "free" | "premium" | "trial"
+      achievement_type: "streak" | "milestone" | "social" | "special"
+      subscription_status: "free" | "premium" | "enterprise"
       user_status: "active" | "inactive" | "suspended"
     }
-    CompositeTypes: {}
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
 

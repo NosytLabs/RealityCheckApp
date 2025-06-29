@@ -29,11 +29,18 @@ export type Profile = Database['public']['Tables']['profiles']['Row']
 export type RealityCheck = Database['public']['Tables']['reality_checks']['Row']
 export type Goal = Database['public']['Tables']['goals']['Row']
 export type UserStats = Database['public']['Tables']['user_stats']['Row']
+export type OfflineSession = Database['public']['Tables']['offline_sessions']['Row']
+export type BlockedApp = Database['public']['Tables']['blocked_apps']['Row']
+export type OfflineChallenge = Database['public']['Tables']['offline_challenges']['Row']
 
 // Insert types
 export type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
 export type GoalInsert = Database['public']['Tables']['goals']['Insert']
+export type OfflineSessionInsert = Database['public']['Tables']['offline_sessions']['Insert']
+export type BlockedAppInsert = Database['public']['Tables']['blocked_apps']['Insert']
 
 // Update types
 export type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
 export type GoalUpdate = Database['public']['Tables']['goals']['Update']
+export type OfflineSessionUpdate = Database['public']['Tables']['offline_sessions']['Update']
+export type BlockedAppUpdate = Database['public']['Tables']['blocked_apps']['Update']

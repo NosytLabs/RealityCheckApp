@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { useTheme } from '../../theme';
-import { Chrome as Home, ChartBar as BarChart3, Target, Settings } from 'lucide-react-native';
+import { Chrome as Home, ChartBar as BarChart3, Target, Settings, Leaf } from 'lucide-react-native';
 
 export default function TabLayout() {
   const { colors } = useTheme();
@@ -49,6 +49,15 @@ export default function TabLayout() {
           title: 'Goals',
           tabBarIcon: ({ color, size }) => (
             <Target color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="offline"
+        options={{
+          title: 'Time Off',
+          tabBarIcon: ({ color, size }) => (
+            <Leaf color={color} size={size} />
           ),
         }}
       />
