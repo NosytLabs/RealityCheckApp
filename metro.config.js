@@ -24,12 +24,4 @@ config.transformer.getTransformOptions = async () => ({
   },
 });
 
-// Ensure SVG components are available globally for web
-config.transformer.minifierConfig = {
-  keep_fnames: true,
-  mangle: {
-    keep_fnames: true,
-  },
-};
-
 module.exports = config;
