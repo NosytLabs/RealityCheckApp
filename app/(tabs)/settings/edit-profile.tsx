@@ -6,17 +6,19 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   ActivityIndicator,
   Image,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../theme';
 import { useApp } from '../../../providers/AppProvider';
+import { useToast } from '../../../components/common/Toast';
 import { Button } from '../../../components/common/Button';
 import { Card } from '../../../components/common/Card';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, Camera } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
 
 interface ProfileData {
   display_name: string;
@@ -26,6 +28,7 @@ interface ProfileData {
 export default function EditProfileScreen() {
   const { colors, typography, spacing } = useTheme();
   const { profile, updateProfile } = useApp();
+  const { showToast } = useToast();
   const router = useRouter();
   
   const [profileData, setProfileData] = useState<ProfileData>({
@@ -67,38 +70,73 @@ export default function EditProfileScreen() {
         avatar_url: avatarUrl,
       });
       
-      Alert.alert(
-        'Success',
-        'Your profile has been updated successfully!',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.back(),
-          },
-        ]
-      );
+      showToast({
+        type: 'success',
+        title: 'Profile Updated',
+        message: 'Your profile has been updated successfully!',
+      });
+      
+      router.back();
     } catch (error: any) {
-      Alert.alert(
-        'Error',
-        error.message || 'Failed to update profile. Please try again.',
-        [{ text: 'OK' }]
-      );
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: error.message || 'Failed to update profile. Please try again.',
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleChangeAvatar = () => {
-    Alert.alert(
-      'Change Avatar',
-      'Choose an option',
-      [
-        { text: 'Camera', onPress: () => console.log('Open camera') },
-        { text: 'Photo Library', onPress: () => console.log('Open photo library') },
-        { text: 'Remove Photo', onPress: () => setAvatarUrl(null), style: 'destructive' },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
+  const handleChangeAvatar = async () => {
+    if (Platform.OS === 'web') {
+      // Web implementation using HTML file input
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = (event: any) => {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setAvatarUrl(e.target?.result as string);
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+      input.click();
+    } else {
+      // Native implementation using expo-image-picker
+      try {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        
+        if (status !== 'granted') {
+          showToast({
+            type: 'error',
+            title: 'Permission Required',
+            message: 'Sorry, we need camera roll permissions to change your avatar.',
+          });
+          return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.8,
+        });
+
+        if (!result.canceled && result.assets[0]) {
+          setAvatarUrl(result.assets[0].uri);
+        }
+      } catch (error) {
+        showToast({
+          type: 'error',
+          title: 'Error',
+          message: 'Failed to pick image. Please try again.',
+        });
+      }
+    }
   };
 
   const updateField = (field: keyof ProfileData, value: string) => {
@@ -179,10 +217,6 @@ export default function EditProfileScreen() {
       alignItems: 'center',
       borderWidth: 3,
       borderColor: colors.background.primary,
-    },
-    changeAvatarText: {
-      color: colors.white,
-      fontSize: 18,
     },
     changeAvatarLabel: {
       ...typography.textStyles.body.md,
@@ -290,7 +324,7 @@ export default function EditProfileScreen() {
               </View>
             )}
             <View style={styles.changeAvatarButton}>
-              <Text style={styles.changeAvatarText}>✎</Text>
+              <Camera color={colors.white} size={18} />
             </View>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleChangeAvatar}>

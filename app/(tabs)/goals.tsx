@@ -6,13 +6,13 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  Alert,
   Modal,
   TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme';
 import { useGoals } from '../../hooks/useGoals';
+import { useToast } from '../../components/common/Toast';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 
@@ -26,6 +26,7 @@ interface NewGoalForm {
 export default function GoalsScreen() {
   const { colors, typography, spacing } = useTheme();
   const { goals, loading, error, createGoal, updateGoal, deleteGoal, refreshGoals } = useGoals();
+  const { showToast } = useToast();
   const [refreshing, setRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<'all' | string>('all');
@@ -75,7 +76,11 @@ export default function GoalsScreen() {
 
   const handleCreateGoal = async () => {
     if (!newGoal.title.trim() || !newGoal.targetValue.trim()) {
-      Alert.alert('Error', 'Please fill in all required fields.');
+      showToast({
+        type: 'error',
+        title: 'Missing Information',
+        message: 'Please fill in all required fields.',
+      });
       return;
     }
 
@@ -95,9 +100,17 @@ export default function GoalsScreen() {
         targetDate: '',
       });
 
-      Alert.alert('Success', 'Goal created successfully!');
+      showToast({
+        type: 'success',
+        title: 'Goal Created',
+        message: 'Your new goal has been added successfully!',
+      });
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to create goal');
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: error.message || 'Failed to create goal',
+      });
     }
   };
 
@@ -114,33 +127,48 @@ export default function GoalsScreen() {
       });
 
       if (isCompleted && !goal.is_completed) {
-        Alert.alert('🎉 Congratulations!', `You've completed your goal: ${goal.title}`);
+        showToast({
+          type: 'success',
+          title: '🎉 Goal Completed!',
+          message: `Congratulations on completing "${goal.title}"!`,
+        });
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to update goal');
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: error.message || 'Failed to update goal',
+      });
     }
   };
 
   const handleDeleteGoal = async (goalId: string) => {
     const goal = goals.find(g => g.id === goalId);
-    Alert.alert(
-      'Delete Goal',
-      `Are you sure you want to delete "${goal?.title}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteGoal(goalId);
-            } catch (error: any) {
-              Alert.alert('Error', error.message || 'Failed to delete goal');
-            }
+    
+    showToast({
+      type: 'warning',
+      title: 'Delete Goal',
+      message: `Are you sure you want to delete "${goal?.title}"?`,
+      action: {
+        label: 'Delete',
+        onPress: async () => {
+          try {
+            await deleteGoal(goalId);
+            showToast({
+              type: 'success',
+              title: 'Goal Deleted',
+              message: 'The goal has been removed.',
+            });
+          } catch (error: any) {
+            showToast({
+              type: 'error',
+              title: 'Error',
+              message: error.message || 'Failed to delete goal',
+            });
           }
-        }
-      ]
-    );
+        },
+      },
+    });
   };
 
   const renderGoalCard = (goal: any) => {
@@ -205,27 +233,12 @@ export default function GoalsScreen() {
               <TouchableOpacity
                 style={[styles.updateButton, { backgroundColor: colors.primary[500] }]}
                 onPress={() => {
-                  Alert.prompt(
-                    'Update Progress',
-                    `Current: ${goal.current_value || 0}`,
-                    [
-                      { text: 'Cancel', style: 'cancel' },
-                      { 
-                        text: 'Update', 
-                        onPress: (value) => {
-                          const numValue = parseFloat(value || '0');
-                          if (!isNaN(numValue) && numValue >= 0) {
-                            handleUpdateProgress(goal.id, numValue);
-                          }
-                        }
-                      }
-                    ],
-                    'plain-text',
-                    (goal.current_value || 0).toString()
-                  );
+                  // Simple increment for demo - in real app, show input modal
+                  const newValue = (goal.current_value || 0) + 1;
+                  handleUpdateProgress(goal.id, newValue);
                 }}
               >
-                <Text style={[styles.updateButtonText, { color: colors.white }]}>Update</Text>
+                <Text style={[styles.updateButtonText, { color: colors.white }]}>+1</Text>
               </TouchableOpacity>
             )}
             

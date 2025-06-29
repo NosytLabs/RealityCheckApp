@@ -3,16 +3,17 @@
 
 // Font families
 export const fontFamilies = {
-  // System fonts for better performance and native feel
-  system: {
-    ios: 'System',
-    android: 'Roboto',
-    default: 'System',
+  // Custom fonts loaded via expo-google-fonts
+  primary: {
+    regular: 'Inter-Regular',
+    medium: 'Inter-Medium',
+    semiBold: 'Inter-SemiBold',
+    bold: 'Inter-Bold',
   },
   
-  // Custom fonts (if needed)
-  primary: {
-    ios: 'SF Pro Display',
+  // System fonts for fallback
+  system: {
+    ios: 'System',
     android: 'Roboto',
     default: 'System',
   },
@@ -83,37 +84,37 @@ export const textStyles = {
     '2xl': {
       fontSize: fontSizes['8xl'], // 96
       lineHeight: lineHeights.none, // 1
-      fontWeight: fontWeights.bold,
+      fontFamily: fontFamilies.primary.bold,
       letterSpacing: letterSpacing.tight,
     },
     xl: {
       fontSize: fontSizes['7xl'], // 72
       lineHeight: lineHeights.none, // 1
-      fontWeight: fontWeights.bold,
+      fontFamily: fontFamilies.primary.bold,
       letterSpacing: letterSpacing.tight,
     },
     lg: {
       fontSize: fontSizes['6xl'], // 60
       lineHeight: lineHeights.none, // 1
-      fontWeight: fontWeights.bold,
+      fontFamily: fontFamilies.primary.bold,
       letterSpacing: letterSpacing.tight,
     },
     md: {
       fontSize: fontSizes['5xl'], // 48
       lineHeight: lineHeights.none, // 1
-      fontWeight: fontWeights.bold,
+      fontFamily: fontFamilies.primary.bold,
       letterSpacing: letterSpacing.tight,
     },
     sm: {
       fontSize: fontSizes['4xl'], // 36
       lineHeight: lineHeights.tight, // 1.25
-      fontWeight: fontWeights.bold,
+      fontFamily: fontFamilies.primary.bold,
       letterSpacing: letterSpacing.tight,
     },
     small: {
       fontSize: fontSizes['4xl'], // 36
       lineHeight: lineHeights.tight, // 1.25
-      fontWeight: fontWeights.bold,
+      fontFamily: fontFamilies.primary.bold,
       letterSpacing: letterSpacing.tight,
     },
   },
@@ -123,43 +124,43 @@ export const textStyles = {
     '4xl': {
       fontSize: fontSizes['4xl'], // 36
       lineHeight: lineHeights.tight, // 1.25
-      fontWeight: fontWeights.bold,
+      fontFamily: fontFamilies.primary.bold,
       letterSpacing: letterSpacing.tight,
     },
     '3xl': {
       fontSize: fontSizes['3xl'], // 30
       lineHeight: lineHeights.tight, // 1.25
-      fontWeight: fontWeights.bold,
+      fontFamily: fontFamilies.primary.bold,
       letterSpacing: letterSpacing.tight,
     },
     '2xl': {
       fontSize: fontSizes['2xl'], // 24
       lineHeight: lineHeights.tight, // 1.25
-      fontWeight: fontWeights.bold,
+      fontFamily: fontFamilies.primary.bold,
       letterSpacing: letterSpacing.normal,
     },
     xl: {
       fontSize: fontSizes.xl, // 20
       lineHeight: lineHeights.tight, // 1.25
-      fontWeight: fontWeights.semiBold,
+      fontFamily: fontFamilies.primary.semiBold,
       letterSpacing: letterSpacing.normal,
     },
     lg: {
       fontSize: fontSizes.lg, // 18
       lineHeight: lineHeights.tight, // 1.25
-      fontWeight: fontWeights.semiBold,
+      fontFamily: fontFamilies.primary.semiBold,
       letterSpacing: letterSpacing.normal,
     },
     md: {
       fontSize: fontSizes.md, // 16
       lineHeight: lineHeights.snug, // 1.375
-      fontWeight: fontWeights.semiBold,
+      fontFamily: fontFamilies.primary.semiBold,
       letterSpacing: letterSpacing.normal,
     },
     sm: {
       fontSize: fontSizes.base, // 14
       lineHeight: lineHeights.snug, // 1.375
-      fontWeight: fontWeights.semiBold,
+      fontFamily: fontFamilies.primary.semiBold,
       letterSpacing: letterSpacing.normal,
     },
   },
@@ -169,43 +170,43 @@ export const textStyles = {
     xl: {
       fontSize: fontSizes.xl, // 20
       lineHeight: lineHeights.relaxed, // 1.625
-      fontWeight: fontWeights.normal,
+      fontFamily: fontFamilies.primary.regular,
       letterSpacing: letterSpacing.normal,
     },
     lg: {
       fontSize: fontSizes.lg, // 18
       lineHeight: lineHeights.relaxed, // 1.625
-      fontWeight: fontWeights.normal,
+      fontFamily: fontFamilies.primary.regular,
       letterSpacing: letterSpacing.normal,
     },
     large: {
       fontSize: fontSizes.lg, // 18
       lineHeight: lineHeights.relaxed, // 1.625
-      fontWeight: fontWeights.normal,
+      fontFamily: fontFamilies.primary.regular,
       letterSpacing: letterSpacing.normal,
     },
     md: {
       fontSize: fontSizes.md, // 16
       lineHeight: lineHeights.normal, // 1.5
-      fontWeight: fontWeights.normal,
+      fontFamily: fontFamilies.primary.regular,
       letterSpacing: letterSpacing.normal,
     },
     medium: {
       fontSize: fontSizes.md, // 16
       lineHeight: lineHeights.normal, // 1.5
-      fontWeight: fontWeights.normal,
+      fontFamily: fontFamilies.primary.regular,
       letterSpacing: letterSpacing.normal,
     },
     sm: {
       fontSize: fontSizes.base, // 14
       lineHeight: lineHeights.normal, // 1.5
-      fontWeight: fontWeights.normal,
+      fontFamily: fontFamilies.primary.regular,
       letterSpacing: letterSpacing.normal,
     },
     xs: {
       fontSize: fontSizes.sm, // 12
       lineHeight: lineHeights.normal, // 1.5
-      fontWeight: fontWeights.normal,
+      fontFamily: fontFamilies.primary.regular,
       letterSpacing: letterSpacing.normal,
     },
   },
@@ -215,19 +216,19 @@ export const textStyles = {
     lg: {
       fontSize: fontSizes.sm, // 12
       lineHeight: lineHeights.normal, // 1.5
-      fontWeight: fontWeights.medium,
+      fontFamily: fontFamilies.primary.medium,
       letterSpacing: letterSpacing.wide,
     },
     md: {
       fontSize: fontSizes.xs, // 10
       lineHeight: lineHeights.normal, // 1.5
-      fontWeight: fontWeights.medium,
+      fontFamily: fontFamilies.primary.medium,
       letterSpacing: letterSpacing.wide,
     },
     sm: {
       fontSize: fontSizes.xs, // 10
       lineHeight: lineHeights.tight, // 1.25
-      fontWeight: fontWeights.normal,
+      fontFamily: fontFamilies.primary.regular,
       letterSpacing: letterSpacing.wider,
     },
   },
@@ -237,25 +238,25 @@ export const textStyles = {
     lg: {
       fontSize: fontSizes.lg, // 18
       lineHeight: lineHeights.none, // 1
-      fontWeight: fontWeights.semiBold,
+      fontFamily: fontFamilies.primary.semiBold,
       letterSpacing: letterSpacing.normal,
     },
     md: {
       fontSize: fontSizes.md, // 16
       lineHeight: lineHeights.none, // 1
-      fontWeight: fontWeights.semiBold,
+      fontFamily: fontFamilies.primary.semiBold,
       letterSpacing: letterSpacing.normal,
     },
     sm: {
       fontSize: fontSizes.base, // 14
       lineHeight: lineHeights.none, // 1
-      fontWeight: fontWeights.medium,
+      fontFamily: fontFamilies.primary.medium,
       letterSpacing: letterSpacing.normal,
     },
     xs: {
       fontSize: fontSizes.sm, // 12
       lineHeight: lineHeights.none, // 1
-      fontWeight: fontWeights.medium,
+      fontFamily: fontFamilies.primary.medium,
       letterSpacing: letterSpacing.wide,
     },
   },
@@ -265,19 +266,19 @@ export const textStyles = {
     lg: {
       fontSize: fontSizes.base, // 14
       lineHeight: lineHeights.tight, // 1.25
-      fontWeight: fontWeights.medium,
+      fontFamily: fontFamilies.primary.medium,
       letterSpacing: letterSpacing.normal,
     },
     md: {
       fontSize: fontSizes.sm, // 12
       lineHeight: lineHeights.tight, // 1.25
-      fontWeight: fontWeights.medium,
+      fontFamily: fontFamilies.primary.medium,
       letterSpacing: letterSpacing.normal,
     },
     sm: {
       fontSize: fontSizes.xs, // 10
       lineHeight: lineHeights.tight, // 1.25
-      fontWeight: fontWeights.medium,
+      fontFamily: fontFamilies.primary.medium,
       letterSpacing: letterSpacing.wide,
     },
   },
@@ -287,23 +288,20 @@ export const textStyles = {
     lg: {
       fontSize: fontSizes.md, // 16
       lineHeight: lineHeights.normal, // 1.5
-      fontWeight: fontWeights.normal,
-      letterSpacing: letterSpacing.normal,
       fontFamily: fontFamilies.mono.default,
+      letterSpacing: letterSpacing.normal,
     },
     md: {
       fontSize: fontSizes.base, // 14
       lineHeight: lineHeights.normal, // 1.5
-      fontWeight: fontWeights.normal,
-      letterSpacing: letterSpacing.normal,
       fontFamily: fontFamilies.mono.default,
+      letterSpacing: letterSpacing.normal,
     },
     sm: {
       fontSize: fontSizes.sm, // 12
       lineHeight: lineHeights.normal, // 1.5
-      fontWeight: fontWeights.normal,
-      letterSpacing: letterSpacing.normal,
       fontFamily: fontFamilies.mono.default,
+      letterSpacing: letterSpacing.normal,
     },
   },
 } as const;
@@ -313,11 +311,6 @@ export const getFontSize = (size: keyof typeof fontSizes): number => fontSizes[s
 export const getLineHeight = (height: keyof typeof lineHeights): number => lineHeights[height];
 export const getFontWeight = (weight: keyof typeof fontWeights): string => fontWeights[weight];
 export const getLetterSpacing = (spacing: keyof typeof letterSpacing): number => letterSpacing[spacing];
-
-// Platform-specific font family helper
-export const getPlatformFontFamily = (family: keyof typeof fontFamilies, platform: 'ios' | 'android' | 'default' = 'default'): string => {
-  return fontFamilies[family][platform];
-};
 
 // Text style helper
 export const getTextStyle = (category: keyof typeof textStyles, size: string) => {
