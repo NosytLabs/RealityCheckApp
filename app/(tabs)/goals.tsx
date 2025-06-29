@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -12,47 +12,28 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme';
-import { useApp } from '../../providers/AppProvider';
+import { useGoals } from '../../hooks/useGoals';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
-
-interface Goal {
-  id: string;
-  title: string;
-  description: string;
-  targetValue: number;
-  currentValue: number;
-  unit: string;
-  category: 'screen_time' | 'mindfulness' | 'productivity' | 'wellness';
-  deadline: string;
-  isCompleted: boolean;
-  createdAt: string;
-}
 
 interface NewGoalForm {
   title: string;
   description: string;
   targetValue: string;
-  unit: string;
-  category: Goal['category'];
-  deadline: string;
+  targetDate: string;
 }
 
 export default function GoalsScreen() {
   const { colors, typography, spacing } = useTheme();
-  const { user } = useApp();
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { goals, loading, error, createGoal, updateGoal, deleteGoal, refreshGoals } = useGoals();
   const [refreshing, setRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<'all' | Goal['category']>('all');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | string>('all');
   const [newGoal, setNewGoal] = useState<NewGoalForm>({
     title: '',
     description: '',
     targetValue: '',
-    unit: 'minutes',
-    category: 'screen_time',
-    deadline: '',
+    targetDate: '',
   });
 
   const categories = [
@@ -63,76 +44,18 @@ export default function GoalsScreen() {
     { key: 'wellness', label: 'Wellness', icon: '💪', color: colors.purple[500] },
   ];
 
-  // Mock data for demonstration
-  const mockGoals: Goal[] = [
-    {
-      id: '1',
-      title: 'Reduce Daily Screen Time',
-      description: 'Limit daily screen time to 4 hours or less',
-      targetValue: 240,
-      currentValue: 180,
-      unit: 'minutes',
-      category: 'screen_time',
-      deadline: '2025-02-15',
-      isCompleted: false,
-      createdAt: '2025-01-01',
-    },
-    {
-      id: '2',
-      title: 'Daily Meditation',
-      description: 'Practice mindfulness meditation for 20 minutes daily',
-      targetValue: 20,
-      currentValue: 15,
-      unit: 'minutes',
-      category: 'mindfulness',
-      deadline: '2025-01-31',
-      isCompleted: false,
-      createdAt: '2025-01-01',
-    },
-    {
-      id: '3',
-      title: 'Focus Sessions',
-      description: 'Complete 5 focused work sessions per day',
-      targetValue: 5,
-      currentValue: 5,
-      unit: 'sessions',
-      category: 'productivity',
-      deadline: '2025-01-30',
-      isCompleted: true,
-      createdAt: '2025-01-01',
-    },
-  ];
-
-  useEffect(() => {
-    loadGoals();
-  }, []);
-
-  const loadGoals = async () => {
-    try {
-      setLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setGoals(mockGoals);
-    } catch (error) {
-      console.error('Error loading goals:', error);
-      Alert.alert('Error', 'Failed to load goals. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadGoals();
+    await refreshGoals();
     setRefreshing(false);
   };
 
   const filteredGoals = selectedCategory === 'all' 
     ? goals 
-    : goals.filter(goal => goal.category === selectedCategory);
+    : goals.filter(goal => goal.title.toLowerCase().includes(selectedCategory));
 
-  const getProgressPercentage = (goal: Goal) => {
-    return Math.min((goal.currentValue / goal.targetValue) * 100, 100);
+  const getProgressPercentage = (current: number, target: number) => {
+    return Math.min((current / target) * 100, 100);
   };
 
   const getProgressColor = (percentage: number, isCompleted: boolean) => {
@@ -150,58 +73,81 @@ export default function GoalsScreen() {
     return diffDays;
   };
 
-  const handleCreateGoal = () => {
+  const handleCreateGoal = async () => {
     if (!newGoal.title.trim() || !newGoal.targetValue.trim()) {
       Alert.alert('Error', 'Please fill in all required fields.');
       return;
     }
 
-    const goal: Goal = {
-      id: Date.now().toString(),
-      title: newGoal.title.trim(),
-      description: newGoal.description.trim(),
-      targetValue: parseFloat(newGoal.targetValue),
-      currentValue: 0,
-      unit: newGoal.unit,
-      category: newGoal.category,
-      deadline: newGoal.deadline || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      isCompleted: false,
-      createdAt: new Date().toISOString().split('T')[0],
-    };
+    try {
+      await createGoal({
+        title: newGoal.title.trim(),
+        description: newGoal.description.trim() || null,
+        target_value: parseFloat(newGoal.targetValue),
+        target_date: newGoal.targetDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      });
 
-    setGoals(prev => [goal, ...prev]);
-    setShowCreateModal(false);
-    setNewGoal({
-      title: '',
-      description: '',
-      targetValue: '',
-      unit: 'minutes',
-      category: 'screen_time',
-      deadline: '',
-    });
+      setShowCreateModal(false);
+      setNewGoal({
+        title: '',
+        description: '',
+        targetValue: '',
+        targetDate: '',
+      });
 
-    Alert.alert('Success', 'Goal created successfully!');
+      Alert.alert('Success', 'Goal created successfully!');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to create goal');
+    }
   };
 
-  const handleUpdateProgress = (goalId: string, newValue: number) => {
-    setGoals(prev => prev.map(goal => {
-      if (goal.id === goalId) {
-        const updatedGoal = { ...goal, currentValue: newValue };
-        if (newValue >= goal.targetValue && !goal.isCompleted) {
-          updatedGoal.isCompleted = true;
-          Alert.alert('🎉 Congratulations!', `You've completed your goal: ${goal.title}`);
-        }
-        return updatedGoal;
+  const handleUpdateProgress = async (goalId: string, newValue: number) => {
+    try {
+      const goal = goals.find(g => g.id === goalId);
+      if (!goal) return;
+
+      const isCompleted = newValue >= goal.target_value;
+      
+      await updateGoal(goalId, {
+        current_value: newValue,
+        is_completed: isCompleted,
+      });
+
+      if (isCompleted && !goal.is_completed) {
+        Alert.alert('🎉 Congratulations!', `You've completed your goal: ${goal.title}`);
       }
-      return goal;
-    }));
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to update goal');
+    }
   };
 
-  const renderGoalCard = (goal: Goal) => {
-    const progress = getProgressPercentage(goal);
-    const progressColor = getProgressColor(progress, goal.isCompleted);
-    const daysRemaining = getDaysRemaining(goal.deadline);
-    const category = categories.find(cat => cat.key === goal.category);
+  const handleDeleteGoal = async (goalId: string) => {
+    const goal = goals.find(g => g.id === goalId);
+    Alert.alert(
+      'Delete Goal',
+      `Are you sure you want to delete "${goal?.title}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteGoal(goalId);
+            } catch (error: any) {
+              Alert.alert('Error', error.message || 'Failed to delete goal');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const renderGoalCard = (goal: any) => {
+    const progress = getProgressPercentage(goal.current_value || 0, goal.target_value);
+    const progressColor = getProgressColor(progress, goal.is_completed);
+    const daysRemaining = getDaysRemaining(goal.target_date);
+    const category = categories.find(cat => goal.title.toLowerCase().includes(cat.key)) || categories[0];
 
     return (
       <Card key={goal.id} style={styles.goalCard} padding="large">
@@ -217,7 +163,7 @@ export default function GoalsScreen() {
               </Text>
             ) : null}
           </View>
-          {goal.isCompleted && (
+          {goal.is_completed && (
             <View style={[styles.completedBadge, { backgroundColor: colors.success[100] }]}>
               <Text style={[styles.completedText, { color: colors.success[700] }]}>✓ Completed</Text>
             </View>
@@ -227,7 +173,7 @@ export default function GoalsScreen() {
         <View style={styles.progressSection}>
           <View style={styles.progressInfo}>
             <Text style={[styles.progressText, { color: colors.text.primary }]}>
-              {goal.currentValue} / {goal.targetValue} {goal.unit}
+              {goal.current_value || 0} / {goal.target_value}
             </Text>
             <Text style={[styles.progressPercentage, { color: progressColor }]}>
               {Math.round(progress)}%
@@ -254,33 +200,42 @@ export default function GoalsScreen() {
              `${Math.abs(daysRemaining)} days overdue`}
           </Text>
           
-          {!goal.isCompleted && (
-            <TouchableOpacity
-              style={[styles.updateButton, { backgroundColor: colors.primary[500] }]}
-              onPress={() => {
-                Alert.prompt(
-                  'Update Progress',
-                  `Current: ${goal.currentValue} ${goal.unit}`,
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    { 
-                      text: 'Update', 
-                      onPress: (value) => {
-                        const numValue = parseFloat(value || '0');
-                        if (!isNaN(numValue) && numValue >= 0) {
-                          handleUpdateProgress(goal.id, numValue);
+          <View style={styles.goalActions}>
+            {!goal.is_completed && (
+              <TouchableOpacity
+                style={[styles.updateButton, { backgroundColor: colors.primary[500] }]}
+                onPress={() => {
+                  Alert.prompt(
+                    'Update Progress',
+                    `Current: ${goal.current_value || 0}`,
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      { 
+                        text: 'Update', 
+                        onPress: (value) => {
+                          const numValue = parseFloat(value || '0');
+                          if (!isNaN(numValue) && numValue >= 0) {
+                            handleUpdateProgress(goal.id, numValue);
+                          }
                         }
                       }
-                    }
-                  ],
-                  'plain-text',
-                  goal.currentValue.toString()
-                );
-              }}
+                    ],
+                    'plain-text',
+                    (goal.current_value || 0).toString()
+                  );
+                }}
+              >
+                <Text style={[styles.updateButtonText, { color: colors.white }]}>Update</Text>
+              </TouchableOpacity>
+            )}
+            
+            <TouchableOpacity
+              style={[styles.deleteButton, { borderColor: colors.error[300] }]}
+              onPress={() => handleDeleteGoal(goal.id)}
             >
-              <Text style={[styles.updateButtonText, { color: colors.white }]}>Update</Text>
+              <Text style={[styles.deleteButtonText, { color: colors.error[500] }]}>Delete</Text>
             </TouchableOpacity>
-          )}
+          </View>
         </View>
       </Card>
     );
@@ -421,6 +376,11 @@ export default function GoalsScreen() {
     },
     deadlineText: {
       ...typography.textStyles.caption.lg,
+      flex: 1,
+    },
+    goalActions: {
+      flexDirection: 'row',
+      gap: spacing.sm,
     },
     updateButton: {
       paddingHorizontal: spacing.md,
@@ -428,6 +388,15 @@ export default function GoalsScreen() {
       borderRadius: spacing.md,
     },
     updateButtonText: {
+      ...typography.textStyles.button.sm,
+    },
+    deleteButton: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: spacing.md,
+      borderWidth: 1,
+    },
+    deleteButtonText: {
       ...typography.textStyles.button.sm,
     },
     emptyState: {
@@ -523,6 +492,12 @@ export default function GoalsScreen() {
     saveButtonText: {
       color: colors.white,
     },
+    errorText: {
+      ...typography.textStyles.body.medium,
+      color: colors.error[500],
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
   });
 
   if (loading) {
@@ -589,6 +564,10 @@ export default function GoalsScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
+        {error && (
+          <Text style={styles.errorText}>{error}</Text>
+        )}
+        
         {filteredGoals.length > 0 ? (
           filteredGoals.map(renderGoalCard)
         ) : (
@@ -650,12 +629,12 @@ export default function GoalsScreen() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Unit</Text>
+                <Text style={styles.label}>Target Date</Text>
                 <TextInput
                   style={styles.input}
-                  value={newGoal.unit}
-                  onChangeText={(text) => setNewGoal(prev => ({ ...prev, unit: text }))}
-                  placeholder="e.g., minutes, hours, sessions"
+                  value={newGoal.targetDate}
+                  onChangeText={(text) => setNewGoal(prev => ({ ...prev, targetDate: text }))}
+                  placeholder="YYYY-MM-DD (optional)"
                   placeholderTextColor={colors.text.tertiary}
                 />
               </View>

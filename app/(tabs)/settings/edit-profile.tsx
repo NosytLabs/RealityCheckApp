@@ -19,30 +19,24 @@ import { Card } from '../../../components/common/Card';
 import { ArrowLeft } from 'lucide-react-native';
 
 interface ProfileData {
-  displayName: string;
-  email: string;
+  display_name: string;
   bio: string;
-  phone: string;
-  location: string;
 }
 
 export default function EditProfileScreen() {
   const { colors, typography, spacing } = useTheme();
-  const { user } = useApp();
+  const { profile, updateProfile } = useApp();
   const router = useRouter();
   
   const [profileData, setProfileData] = useState<ProfileData>({
-    displayName: user?.user_metadata?.display_name || '',
-    email: user?.email || '',
-    bio: user?.user_metadata?.bio || '',
-    phone: user?.user_metadata?.phone || '',
-    location: user?.user_metadata?.location || '',
+    display_name: profile?.display_name || '',
+    bio: profile?.bio || '',
   });
   
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<ProfileData>>({});
   const [avatarUrl, setAvatarUrl] = useState<string | null>(
-    user?.user_metadata?.avatar_url || null
+    profile?.avatar_url || null
   );
 
   const scrollViewRef = useRef<ScrollView>(null);
@@ -50,20 +44,10 @@ export default function EditProfileScreen() {
   const validateForm = (): boolean => {
     const newErrors: Partial<ProfileData> = {};
 
-    if (!profileData.displayName.trim()) {
-      newErrors.displayName = 'Display name is required';
-    } else if (profileData.displayName.trim().length < 2) {
-      newErrors.displayName = 'Display name must be at least 2 characters';
-    }
-
-    if (!profileData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(profileData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
-    if (profileData.phone && !/^\+?[\d\s\-\(\)]+$/.test(profileData.phone)) {
-      newErrors.phone = 'Please enter a valid phone number';
+    if (!profileData.display_name.trim()) {
+      newErrors.display_name = 'Display name is required';
+    } else if (profileData.display_name.trim().length < 2) {
+      newErrors.display_name = 'Display name must be at least 2 characters';
     }
 
     setErrors(newErrors);
@@ -72,15 +56,16 @@ export default function EditProfileScreen() {
 
   const handleSave = async () => {
     if (!validateForm()) {
-      Alert.alert('Validation Error', 'Please fix the errors below and try again.');
       return;
     }
 
     setIsLoading(true);
     try {
-      // Here you would typically call your user service to update the profile
-      // For now, we'll simulate an API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await updateProfile({
+        display_name: profileData.display_name.trim(),
+        bio: profileData.bio.trim() || null,
+        avatar_url: avatarUrl,
+      });
       
       Alert.alert(
         'Success',
@@ -92,10 +77,10 @@ export default function EditProfileScreen() {
           },
         ]
       );
-    } catch (error) {
+    } catch (error: any) {
       Alert.alert(
         'Error',
-        'Failed to update profile. Please try again.',
+        error.message || 'Failed to update profile. Please try again.',
         [{ text: 'OK' }]
       );
     } finally {
@@ -299,8 +284,8 @@ export default function EditProfileScreen() {
               <Image source={{ uri: avatarUrl }} style={styles.avatar} />
             ) : (
               <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avat arPlaceholderText}>
-                  {profileData.displayName.charAt(0).toUpperCase() || '?'}
+                <Text style={styles.avatarPlaceholderText}>
+                  {profileData.display_name.charAt(0).toUpperCase() || '?'}
                 </Text>
               </View>
             )}
@@ -319,33 +304,15 @@ export default function EditProfileScreen() {
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>Display Name *</Text>
             <TextInput
-              style={[styles.input, errors.displayName && styles.inputError]}
-              value={profileData.displayName}
-              onChangeText={(value) => updateField('displayName', value)}
+              style={[styles.input, errors.display_name && styles.inputError]}
+              value={profileData.display_name}
+              onChangeText={(value) => updateField('display_name', value)}
               placeholder="Enter your display name"
               placeholderTextColor={colors.text.secondary}
               maxLength={50}
             />
-            {errors.displayName && (
-              <Text style={styles.errorText}>{errors.displayName}</Text>
-            )}
-          </View>
-
-          {/* Email */}
-          <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Email *</Text>
-            <TextInput
-              style={[styles.input, errors.email && styles.inputError]}
-              value={profileData.email}
-              onChangeText={(value) => updateField('email', value)}
-              placeholder="Enter your email"
-              placeholderTextColor={colors.text.secondary}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
-            {errors.email && (
-              <Text style={styles.errorText}>{errors.email}</Text>
+            {errors.display_name && (
+              <Text style={styles.errorText}>{errors.display_name}</Text>
             )}
           </View>
 
@@ -365,36 +332,6 @@ export default function EditProfileScreen() {
             <Text style={styles.helperText}>
               {profileData.bio.length}/200 characters
             </Text>
-          </View>
-
-          {/* Phone */}
-          <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Phone</Text>
-            <TextInput
-              style={[styles.input, errors.phone && styles.inputError]}
-              value={profileData.phone}
-              onChangeText={(value) => updateField('phone', value)}
-              placeholder="Enter your phone number"
-              placeholderTextColor={colors.text.secondary}
-              keyboardType="phone-pad"
-              autoComplete="tel"
-            />
-            {errors.phone && (
-              <Text style={styles.errorText}>{errors.phone}</Text>
-            )}
-          </View>
-
-          {/* Location */}
-          <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Location</Text>
-            <TextInput
-              style={styles.input}
-              value={profileData.location}
-              onChangeText={(value) => updateField('location', value)}
-              placeholder="Enter your location"
-              placeholderTextColor={colors.text.secondary}
-              maxLength={100}
-            />
           </View>
         </Card>
 

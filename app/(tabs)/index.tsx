@@ -10,7 +10,7 @@ import { Plus, Zap, Moon, Target } from 'lucide-react-native';
 
 export default function DashboardScreen() {
   const { colors, typography, spacing } = useTheme();
-  const { user } = useApp();
+  const { profile } = useApp();
   const router = useRouter();
 
   const quickActions = [
@@ -118,7 +118,7 @@ export default function DashboardScreen() {
     },
   });
 
-  const userName = user?.email?.split('@')[0] || 'there';
+  const userName = profile?.display_name || profile?.email?.split('@')[0] || 'there';
 
   return (
     <SafeAreaView style={styles.container}>

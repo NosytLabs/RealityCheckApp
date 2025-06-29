@@ -34,7 +34,7 @@ interface SettingsSection {
 
 export default function SettingsScreen() {
   const { colors, typography, spacing } = useTheme();
-  const { user, signOut } = useApp();
+  const { profile, signOut } = useApp();
   const router = useRouter();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
@@ -53,8 +53,8 @@ export default function SettingsScreen() {
           onPress: async () => {
             try {
               await signOut();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to sign out. Please try again.');
+            } catch (error: any) {
+              Alert.alert('Error', error.message || 'Failed to sign out. Please try again.');
             }
           }
         }
@@ -424,7 +424,7 @@ export default function SettingsScreen() {
     },
   });
 
-  const userName = user?.email?.split('@')[0] || 'User';
+  const userName = profile?.display_name || profile?.email?.split('@')[0] || 'User';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -435,12 +435,12 @@ export default function SettingsScreen() {
         <View style={styles.profileSection}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
-              {user?.email?.charAt(0).toUpperCase() || '👤'}
+              {profile?.display_name?.charAt(0).toUpperCase() || profile?.email?.charAt(0).toUpperCase() || '👤'}
             </Text>
           </View>
           <Text style={styles.userName}>{userName}</Text>
           <Text style={styles.userEmail}>
-            {user?.email || 'user@example.com'}
+            {profile?.email || 'user@example.com'}
           </Text>
         </View>
       </View>

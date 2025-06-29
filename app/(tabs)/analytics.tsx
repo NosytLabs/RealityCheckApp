@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,97 +11,20 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LineChart } from 'react-native-chart-kit';
 import { useTheme } from '../../theme';
-import { useApp } from '../../providers/AppProvider';
+import { useAnalytics } from '../../hooks/useAnalytics';
 import { Card } from '../../components/common/Card';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-interface AnalyticsData {
-  screenTime: {
-    today: number;
-    yesterday: number;
-    weekAverage: number;
-    monthAverage: number;
-  };
-  appUsage: {
-    name: string;
-    time: number;
-    percentage: number;
-    color: string;
-  }[];
-  weeklyData: {
-    labels: string[];
-    datasets: {
-      data: number[];
-      color: (opacity?: number) => string;
-      strokeWidth: number;
-    }[];
-  };
-  goals: {
-    dailyLimit: number;
-    currentUsage: number;
-    achieved: boolean;
-  };
-}
-
 export default function AnalyticsScreen() {
   const { colors, typography, spacing } = useTheme();
-  const { user } = useApp();
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { analyticsData, loading, error, refreshAnalytics } = useAnalytics();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedTimeRange, setSelectedTimeRange] = useState<'week' | 'month' | 'year'>('week');
 
-  useEffect(() => {
-    loadAnalyticsData();
-  }, [selectedTimeRange]);
-
-  const loadAnalyticsData = async () => {
-    setLoading(true);
-    try {
-      // Simulate API call with mock data
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockData: AnalyticsData = {
-        screenTime: {
-          today: 4.2,
-          yesterday: 5.1,
-          weekAverage: 4.8,
-          monthAverage: 5.2,
-        },
-        appUsage: [
-          { name: 'Social Media', time: 2.1, percentage: 35, color: '#FF6B6B' },
-          { name: 'Entertainment', time: 1.5, percentage: 25, color: '#4ECDC4' },
-          { name: 'Productivity', time: 0.8, percentage: 20, color: '#45B7D1' },
-          { name: 'Games', time: 0.6, percentage: 15, color: '#96CEB4' },
-          { name: 'Other', time: 0.3, percentage: 5, color: '#FFEAA7' },
-        ],
-        weeklyData: {
-          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-          datasets: [{
-            data: [3.2, 4.1, 5.2, 4.8, 6.1, 5.5, 3.8],
-            color: (opacity = 1) => `rgba(69, 183, 209, ${opacity})`,
-            strokeWidth: 3,
-          }],
-        },
-        goals: {
-          dailyLimit: 4.0,
-          currentUsage: 4.2,
-          achieved: false,
-        },
-      };
-      
-      setAnalyticsData(mockData);
-    } catch (error) {
-      console.error('Error loading analytics data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadAnalyticsData();
+    await refreshAnalytics();
     setRefreshing(false);
   };
 
@@ -270,6 +193,12 @@ export default function AnalyticsScreen() {
       ...typography.textStyles.caption.lg,
       color: colors.text.secondary,
     },
+    errorText: {
+      ...typography.textStyles.body.medium,
+      color: colors.error[500],
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
   });
 
   if (loading && !analyticsData) {
@@ -325,6 +254,10 @@ export default function AnalyticsScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {error && (
+          <Text style={styles.errorText}>{error}</Text>
+        )}
 
         {analyticsData && (
           <>
