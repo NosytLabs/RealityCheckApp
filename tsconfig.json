@@ -10,6 +10,37 @@
     "forceConsistentCasingInFileNames": true,
     "jsx": "react-native",
     "jsxFactory": "React.createElement",
-    "jsxFragmentFactory": "React.Fragment"
-  }
+    "jsxFragmentFactory": "React.Fragment",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./app/*"
+      ],
+      "@/components/*": [
+        "./components/*"
+      ],
+      "@/hooks/*": [
+        "./hooks/*"
+      ],
+      "@/types/*": [
+        "./types/*"
+      ],
+      "@/config/*": [
+        "./config/*"
+      ],
+      "@/services/*": [
+        "./services/*"
+      ],
+      "@/theme/*": [
+        "./theme/*"
+      ],
+      "@/providers/*": [
+        "./providers/*"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ]
 }
