@@ -5,8 +5,6 @@ import { AppProvider } from '../providers/AppProvider';
 import { ThemeProvider } from '../theme';
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
-// Ensure SVG components are available for web bundling
-import { Svg } from 'react-native-svg';
 
 export default function RootLayout() {
   useFrameworkReady();
