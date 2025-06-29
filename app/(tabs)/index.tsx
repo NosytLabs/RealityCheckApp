@@ -4,10 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../theme';
 import { useApp } from '../../providers/AppProvider';
+import { useInAppTracking } from '../../hooks/useInAppTracking';
 import { useToast } from '../../components/common/Toast';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
-import { Plus, Zap, Moon, Target, TrendingUp, Award, Clock, Users, Sparkles } from 'lucide-react-native';
+import { MindfulBreakModal } from '../../components/modals/MindfulBreakModal';
+import { Plus, Zap, Moon, Target, TrendingUp, Award, Clock, Users, Sparkles, Leaf } from 'lucide-react-native';
 import { supabase, checkSupabaseConnection } from '../../lib/supabase';
 
 interface DashboardStats {
@@ -43,11 +45,19 @@ export default function DashboardScreen() {
   const { colors, typography, spacing } = useTheme();
   const { profile, user } = useApp();
   const { showToast } = useToast();
+  const { startTracking } = useInAppTracking();
   const router = useRouter();
   
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showMindfulBreak, setShowMindfulBreak] = useState(false);
+  const [mindfulBreakType, setMindfulBreakType] = useState<'breathing' | 'reflection' | 'gratitude'>('breathing');
+
+  // Start tracking this screen
+  useEffect(() => {
+    startTracking('Dashboard');
+  }, []);
 
   const quickActions = [
     {
@@ -57,19 +67,8 @@ export default function DashboardScreen() {
       icon: <Zap color={colors.primary[500]} size={24} />,
       gradient: [colors.primary[500], colors.primary[600]],
       onPress: () => {
-        if (Platform.OS === 'web') {
-          showToast({
-            type: 'info',
-            title: 'Reality Check ✨',
-            message: 'This feature works best on mobile devices with camera access.',
-          });
-        } else {
-          showToast({
-            type: 'success',
-            title: 'Reality Check Started 🧘',
-            message: 'Take a deep breath and be present in this moment.',
-          });
-        }
+        setMindfulBreakType('reflection');
+        setShowMindfulBreak(true);
       },
     },
     {
@@ -79,6 +78,14 @@ export default function DashboardScreen() {
       icon: <Target color={colors.success[500]} size={24} />,
       gradient: [colors.success[500], colors.success[600]],
       onPress: () => router.push('/focus-mode'),
+    },
+    {
+      id: 'touch-grass',
+      title: 'Touch Grass Stroll',
+      description: 'Grow your digital garden',
+      icon: <Leaf color={colors.green[500]} size={24} />,
+      gradient: [colors.green[500], colors.green[600]],
+      onPress: () => router.push('/touch-grass-stroll'),
     },
     {
       id: 'downtime',
@@ -91,7 +98,9 @@ export default function DashboardScreen() {
   ];
 
   useEffect(() => {
-    loadDashboardData();
+    if (user) {
+      loadDashboardData();
+    }
   }, [user]);
 
   const loadDashboardData = async () => {
@@ -211,6 +220,14 @@ export default function DashboardScreen() {
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
     return `${h}h ${m}m`;
+  };
+
+  const handleMindfulBreakComplete = () => {
+    showToast({
+      type: 'success',
+      title: '🌟 Mindful Moment Complete!',
+      message: 'You\'ve taken a meaningful pause. How do you feel?',
+    });
   };
 
   const styles = StyleSheet.create({
@@ -395,6 +412,42 @@ export default function DashboardScreen() {
       color: colors.text.secondary,
       fontWeight: '600',
     },
+    mindfulPrompt: {
+      backgroundColor: colors.blue[50],
+      borderRadius: spacing.lg,
+      padding: spacing.lg,
+      marginTop: spacing.lg,
+      alignItems: 'center',
+    },
+    mindfulPromptTitle: {
+      ...typography.textStyles.body.large,
+      color: colors.blue[700],
+      fontWeight: '700',
+      marginBottom: spacing.sm,
+      textAlign: 'center',
+    },
+    mindfulPromptText: {
+      ...typography.textStyles.body.medium,
+      color: colors.blue[600],
+      textAlign: 'center',
+      lineHeight: 22,
+      marginBottom: spacing.lg,
+    },
+    mindfulPromptButtons: {
+      flexDirection: 'row',
+      gap: spacing.md,
+    },
+    mindfulPromptButton: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderRadius: spacing.lg,
+      backgroundColor: colors.blue[500],
+    },
+    mindfulPromptButtonText: {
+      ...typography.textStyles.button.sm,
+      color: colors.white,
+      fontWeight: '700',
+    },
   });
 
   const userName = profile?.display_name || profile?.email?.split('@')[0] || 'there';
@@ -428,6 +481,34 @@ export default function DashboardScreen() {
           style={styles.inspirationalImage}
           resizeMode="cover"
         />
+
+        {/* Mindful Break Prompt */}
+        <View style={styles.mindfulPrompt}>
+          <Text style={styles.mindfulPromptTitle}>✨ Take a Mindful Moment</Text>
+          <Text style={styles.mindfulPromptText}>
+            You've been using your device for a while. How about a quick mindful break?
+          </Text>
+          <View style={styles.mindfulPromptButtons}>
+            <TouchableOpacity 
+              style={styles.mindfulPromptButton}
+              onPress={() => {
+                setMindfulBreakType('breathing');
+                setShowMindfulBreak(true);
+              }}
+            >
+              <Text style={styles.mindfulPromptButtonText}>Breathing</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.mindfulPromptButton}
+              onPress={() => {
+                setMindfulBreakType('gratitude');
+                setShowMindfulBreak(true);
+              }}
+            >
+              <Text style={styles.mindfulPromptButtonText}>Gratitude</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </Card>
 
       <ScrollView 
@@ -536,6 +617,14 @@ export default function DashboardScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Mindful Break Modal */}
+      <MindfulBreakModal
+        visible={showMindfulBreak}
+        onClose={() => setShowMindfulBreak(false)}
+        onComplete={handleMindfulBreakComplete}
+        type={mindfulBreakType}
+      />
     </SafeAreaView>
   );
 }

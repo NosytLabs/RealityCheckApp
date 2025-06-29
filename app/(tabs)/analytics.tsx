@@ -13,16 +13,25 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LineChart } from 'react-native-chart-kit';
 import { useTheme } from '../../theme';
 import { useAnalytics } from '../../hooks/useAnalytics';
+import { useInAppTracking } from '../../hooks/useInAppTracking';
 import { Card } from '../../components/common/Card';
-import { TrendingUp, TrendingDown, Target, Zap, Award } from 'lucide-react-native';
+import { ExternalUsageModal } from '../../components/modals/ExternalUsageModal';
+import { TrendingUp, TrendingDown, Target, Zap, Award, Plus, Clock } from 'lucide-react-native';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 export default function AnalyticsScreen() {
   const { colors, typography, spacing } = useTheme();
   const { analyticsData, loading, error, refreshAnalytics } = useAnalytics();
+  const { startTracking } = useInAppTracking();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedTimeRange, setSelectedTimeRange] = useState<'week' | 'month' | 'year'>('week');
+  const [showExternalModal, setShowExternalModal] = useState(false);
+
+  // Start tracking this screen
+  React.useEffect(() => {
+    startTracking('Analytics');
+  }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -259,6 +268,26 @@ export default function AnalyticsScreen() {
     appUsageContainer: {
       gap: spacing.lg,
     },
+    appUsageHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.lg,
+    },
+    logUsageButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.primary[500],
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: spacing.lg,
+    },
+    logUsageText: {
+      ...typography.textStyles.caption.lg,
+      color: colors.white,
+      fontWeight: '700',
+      marginLeft: spacing.xs,
+    },
     appUsageItem: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -286,6 +315,11 @@ export default function AnalyticsScreen() {
       color: colors.text.primary,
       fontWeight: '700',
       marginBottom: spacing.xs,
+    },
+    appSource: {
+      ...typography.textStyles.caption.md,
+      color: colors.text.tertiary,
+      fontWeight: '500',
     },
     appUsageStats: {
       alignItems: 'flex-end',
@@ -338,6 +372,34 @@ export default function AnalyticsScreen() {
       color: colors.warning[700],
       fontWeight: '600',
       marginLeft: spacing.sm,
+    },
+    inAppUsageContainer: {
+      backgroundColor: colors.blue[50],
+      borderRadius: spacing.md,
+      padding: spacing.lg,
+      marginTop: spacing.lg,
+    },
+    inAppUsageTitle: {
+      ...typography.textStyles.body.large,
+      color: colors.blue[700],
+      fontWeight: '700',
+      marginBottom: spacing.md,
+    },
+    inAppUsageItem: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.sm,
+    },
+    inAppUsageScreen: {
+      ...typography.textStyles.body.medium,
+      color: colors.blue[600],
+      fontWeight: '600',
+    },
+    inAppUsageTime: {
+      ...typography.textStyles.body.medium,
+      color: colors.blue[700],
+      fontWeight: '700',
     },
   });
 
@@ -503,11 +565,36 @@ export default function AnalyticsScreen() {
                   />
                 </View>
               </View>
+
+              {/* In-App Usage Breakdown */}
+              {analyticsData.inAppUsage.totalMinutes > 0 && (
+                <View style={styles.inAppUsageContainer}>
+                  <Text style={styles.inAppUsageTitle}>
+                    📱 RealityCheck Usage: {Math.floor(analyticsData.inAppUsage.totalMinutes / 60)}h {analyticsData.inAppUsage.totalMinutes % 60}m
+                  </Text>
+                  {Object.entries(analyticsData.inAppUsage.screenBreakdown).map(([screen, minutes]) => (
+                    <View key={screen} style={styles.inAppUsageItem}>
+                      <Text style={styles.inAppUsageScreen}>{screen}</Text>
+                      <Text style={styles.inAppUsageTime}>{minutes}m</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </Card>
 
             {/* Enhanced App Usage Breakdown */}
             <Card style={styles.card} padding="large">
-              <Text style={styles.cardTitle}>App Categories</Text>
+              <View style={styles.appUsageHeader}>
+                <Text style={styles.cardTitle}>App Usage Today</Text>
+                <TouchableOpacity 
+                  style={styles.logUsageButton}
+                  onPress={() => setShowExternalModal(true)}
+                >
+                  <Plus color={colors.white} size={16} />
+                  <Text style={styles.logUsageText}>Log Usage</Text>
+                </TouchableOpacity>
+              </View>
+              
               <View style={styles.appUsageContainer}>
                 {analyticsData.appUsage.map((app, index) => (
                   <View key={index} style={styles.appUsageItem}>
@@ -515,6 +602,9 @@ export default function AnalyticsScreen() {
                       <View style={[styles.appColorIndicator, { backgroundColor: app.color }]} />
                       <View style={styles.appDetails}>
                         <Text style={styles.appName}>{app.name}</Text>
+                        <Text style={styles.appSource}>
+                          {app.source === 'in_app' ? '📱 In-app tracking' : '✏️ Manually logged'}
+                        </Text>
                         <View style={styles.appProgressBar}>
                           <View style={[
                             styles.appProgressFill,
@@ -534,6 +624,15 @@ export default function AnalyticsScreen() {
           </>
         )}
       </ScrollView>
+
+      {/* External Usage Modal */}
+      <ExternalUsageModal
+        visible={showExternalModal}
+        onClose={() => setShowExternalModal(false)}
+        onSuccess={() => {
+          refreshAnalytics();
+        }}
+      />
     </SafeAreaView>
   );
 }

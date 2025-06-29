@@ -63,6 +63,14 @@ export default function RootLayout() {
                   title: 'Focus Mode'
                 }} 
               />
+              <Stack.Screen 
+                name="touch-grass-stroll" 
+                options={{ 
+                  presentation: 'modal',
+                  headerShown: true,
+                  title: 'Touch Grass Stroll'
+                }} 
+              />
               <Stack.Screen name="+not-found" />
             </Stack>
             <StatusBar style="auto" />
