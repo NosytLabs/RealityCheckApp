@@ -8,6 +8,8 @@ config.resolver.platforms = ['native', 'web', 'ios', 'android'];
 // Ensure proper SVG handling for web
 config.resolver.alias = {
   'react-native-svg': 'react-native-svg/lib/commonjs/ReactNativeSVG.web.js',
+  // Add path polyfill for web
+  'path': 'path-browserify',
 };
 
 // Configure SVG transformer
