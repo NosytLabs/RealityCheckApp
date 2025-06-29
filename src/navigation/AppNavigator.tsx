@@ -15,7 +15,7 @@ import SettingsScreen from '../screens/settings/SettingsScreen';
 import EditProfileScreen from '../screens/settings/EditProfileScreen';
 import PrivacyPolicyScreen from '../screens/settings/PrivacyPolicyScreen';
 import InterventionSettingsScreen from '../screens/settings/InterventionSettingsScreen';
-import AppUsageLimitsScreen from '../screens/AppUsageLimitsScreen';
+import AppUsageLimitsScreen from '../screens/settings/AppUsageLimitsScreen';
 import ScheduledDowntimeScreen from '../screens/ScheduledDowntimeScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
