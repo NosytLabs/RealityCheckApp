@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme';
-import { CheckCircle, AlertCircle, XCircle, Info, X } from 'lucide-react-native';
+import { CircleCheck as CheckCircle, CircleAlert as AlertCircle, Circle as XCircle, Info, X } from 'lucide-react-native';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
