@@ -27,7 +27,8 @@ module.exports = {
       package: 'com.realitycheck.app'
     },
     web: {
-      bundler: 'metro'
+      bundler: 'metro',
+      output: 'server'
     },
     plugins: [
       "expo-dev-client",
