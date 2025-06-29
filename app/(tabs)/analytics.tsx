@@ -7,12 +7,14 @@ import {
   Dimensions,
   TouchableOpacity,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LineChart } from 'react-native-chart-kit';
 import { useTheme } from '../../theme';
 import { useAnalytics } from '../../hooks/useAnalytics';
 import { Card } from '../../components/common/Card';
+import { TrendingUp, TrendingDown, Target, Zap, Award } from 'lucide-react-native';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -36,8 +38,10 @@ export default function AnalyticsScreen() {
 
   const chartConfig = {
     backgroundColor: colors.background.primary,
-    backgroundGradientFrom: colors.background.primary,
-    backgroundGradientTo: colors.background.primary,
+    backgroundGradientFrom: colors.primary[500],
+    backgroundGradientTo: colors.primary[600],
+    backgroundGradientFromOpacity: 0.1,
+    backgroundGradientToOpacity: 0.2,
     decimalPlaces: 1,
     color: (opacity = 1) => `rgba(69, 183, 209, ${opacity})`,
     labelColor: (opacity = 1) => colors.text.secondary,
@@ -45,10 +49,12 @@ export default function AnalyticsScreen() {
       borderRadius: 16,
     },
     propsForDots: {
-      r: '6',
-      strokeWidth: '2',
+      r: '8',
+      strokeWidth: '3',
       stroke: colors.primary[500],
+      fill: colors.white,
     },
+    strokeWidth: 4,
   };
 
   const styles = StyleSheet.create({
@@ -71,42 +77,105 @@ export default function AnalyticsScreen() {
     header: {
       padding: spacing.lg,
       paddingBottom: spacing.md,
+      background: `linear-gradient(135deg, ${colors.primary[500]}, ${colors.primary[600]})`,
     },
     title: {
       ...typography.textStyles.heading['2xl'],
       color: colors.text.primary,
       marginBottom: spacing.sm,
+      fontWeight: '800',
     },
     subtitle: {
       ...typography.textStyles.body.large,
       color: colors.text.secondary,
     },
+    heroCard: {
+      marginHorizontal: spacing.lg,
+      marginTop: -spacing.xl,
+      marginBottom: spacing.lg,
+      backgroundColor: colors.white,
+      borderRadius: spacing.lg,
+      padding: spacing.xl,
+      shadowColor: colors.primary[500],
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.15,
+      shadowRadius: 20,
+      elevation: 8,
+    },
+    heroStats: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    heroStatItem: {
+      alignItems: 'center',
+      flex: 1,
+    },
+    heroStatValue: {
+      ...typography.textStyles.heading.xl,
+      color: colors.primary[500],
+      fontWeight: '800',
+      marginBottom: spacing.xs,
+    },
+    heroStatLabel: {
+      ...typography.textStyles.caption.lg,
+      color: colors.text.secondary,
+      textAlign: 'center',
+      fontWeight: '600',
+    },
+    heroStatTrend: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: spacing.xs,
+    },
+    trendText: {
+      ...typography.textStyles.caption.md,
+      marginLeft: spacing.xs,
+      fontWeight: '600',
+    },
     timeRangeContainer: {
       flexDirection: 'row',
       marginHorizontal: spacing.lg,
       marginBottom: spacing.lg,
-      backgroundColor: colors.surface.primary,
-      borderRadius: 12,
-      padding: 4,
+      backgroundColor: colors.gray[100],
+      borderRadius: spacing.lg,
+      padding: spacing.xs,
     },
     timeRangeButton: {
       flex: 1,
-      paddingVertical: spacing.sm,
+      paddingVertical: spacing.md,
       alignItems: 'center',
-      borderRadius: 8,
+      borderRadius: spacing.md,
+    },
+    timeRangeButtonActive: {
+      backgroundColor: colors.primary[500],
+      shadowColor: colors.primary[500],
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
     },
     timeRangeText: {
       ...typography.textStyles.body.medium,
-      fontWeight: '500',
+      fontWeight: '600',
+    },
+    timeRangeTextActive: {
+      color: colors.white,
+    },
+    timeRangeTextInactive: {
+      color: colors.text.secondary,
     },
     card: {
       marginHorizontal: spacing.lg,
-      marginBottom: spacing.md,
+      marginBottom: spacing.lg,
+      borderRadius: spacing.lg,
+      overflow: 'hidden',
     },
     cardTitle: {
-      ...typography.textStyles.heading.md,
+      ...typography.textStyles.heading.lg,
       color: colors.text.primary,
-      marginBottom: spacing.md,
+      marginBottom: spacing.lg,
+      fontWeight: '700',
     },
     screenTimeContainer: {
       alignItems: 'center',
@@ -116,54 +185,87 @@ export default function AnalyticsScreen() {
       ...typography.textStyles.display.sm,
       color: colors.primary[500],
       marginBottom: spacing.sm,
+      fontWeight: '800',
     },
     comparisonContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       width: '100%',
+      backgroundColor: colors.gray[50],
+      borderRadius: spacing.md,
+      padding: spacing.md,
     },
-    comparisonText: {
-      ...typography.textStyles.body.medium,
+    comparisonItem: {
+      alignItems: 'center',
+      flex: 1,
+    },
+    comparisonLabel: {
+      ...typography.textStyles.caption.lg,
       color: colors.text.secondary,
+      marginBottom: spacing.xs,
+      fontWeight: '600',
+    },
+    comparisonValue: {
+      ...typography.textStyles.body.medium,
+      color: colors.text.primary,
+      fontWeight: '700',
     },
     goalContainer: {
-      marginTop: spacing.md,
+      marginTop: spacing.lg,
+      backgroundColor: colors.gray[50],
+      borderRadius: spacing.md,
+      padding: spacing.lg,
     },
     goalHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: spacing.sm,
+      marginBottom: spacing.md,
     },
     goalText: {
       ...typography.textStyles.body.medium,
       color: colors.text.secondary,
+      fontWeight: '600',
     },
     goalStatus: {
       ...typography.textStyles.body.medium,
-      fontWeight: '600',
+      fontWeight: '700',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: spacing.md,
+    },
+    goalStatusAchieved: {
+      backgroundColor: colors.success[100],
+      color: colors.success[700],
+    },
+    goalStatusOverLimit: {
+      backgroundColor: colors.error[100],
+      color: colors.error[700],
     },
     progressBar: {
-      height: 8,
-      borderRadius: 4,
+      height: 12,
+      borderRadius: spacing.md,
       overflow: 'hidden',
       backgroundColor: colors.gray[200],
     },
     progressFill: {
       height: '100%',
-      borderRadius: 4,
+      borderRadius: spacing.md,
     },
     chart: {
-      borderRadius: 16,
-      marginVertical: spacing.sm,
+      borderRadius: spacing.lg,
+      marginVertical: spacing.md,
     },
     appUsageContainer: {
-      gap: spacing.md,
+      gap: spacing.lg,
     },
     appUsageItem: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
+      backgroundColor: colors.gray[50],
+      borderRadius: spacing.md,
+      padding: spacing.lg,
     },
     appUsageInfo: {
       flexDirection: 'row',
@@ -171,15 +273,19 @@ export default function AnalyticsScreen() {
       flex: 1,
     },
     appColorIndicator: {
-      width: 12,
-      height: 12,
-      borderRadius: 6,
-      marginRight: spacing.md,
+      width: 16,
+      height: 16,
+      borderRadius: spacing.md,
+      marginRight: spacing.lg,
+    },
+    appDetails: {
+      flex: 1,
     },
     appName: {
       ...typography.textStyles.body.large,
       color: colors.text.primary,
-      fontWeight: '500',
+      fontWeight: '700',
+      marginBottom: spacing.xs,
     },
     appUsageStats: {
       alignItems: 'flex-end',
@@ -187,17 +293,51 @@ export default function AnalyticsScreen() {
     appTime: {
       ...typography.textStyles.body.large,
       color: colors.text.primary,
-      fontWeight: '600',
+      fontWeight: '700',
+      marginBottom: spacing.xs,
     },
     appPercentage: {
       ...typography.textStyles.caption.lg,
       color: colors.text.secondary,
+      fontWeight: '600',
+    },
+    appProgressBar: {
+      width: 60,
+      height: 6,
+      backgroundColor: colors.gray[200],
+      borderRadius: spacing.xs,
+      marginTop: spacing.xs,
+      overflow: 'hidden',
+    },
+    appProgressFill: {
+      height: '100%',
+      borderRadius: spacing.xs,
     },
     errorText: {
       ...typography.textStyles.body.medium,
       color: colors.error[500],
       textAlign: 'center',
       marginBottom: spacing.md,
+    },
+    inspirationalImage: {
+      width: '100%',
+      height: 120,
+      borderRadius: spacing.md,
+      marginBottom: spacing.lg,
+    },
+    achievementBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.warning[100],
+      borderRadius: spacing.lg,
+      padding: spacing.md,
+      marginTop: spacing.md,
+    },
+    achievementText: {
+      ...typography.textStyles.body.medium,
+      color: colors.warning[700],
+      fontWeight: '600',
+      marginLeft: spacing.sm,
     },
   });
 
@@ -222,37 +362,8 @@ export default function AnalyticsScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Screen Time Analytics</Text>
-          <Text style={styles.subtitle}>Your digital wellness insights</Text>
-        </View>
-
-        {/* Time Range Selector */}
-        <View style={styles.timeRangeContainer}>
-          {(['week', 'month', 'year'] as const).map((range) => (
-            <TouchableOpacity
-              key={range}
-              style={[
-                styles.timeRangeButton,
-                selectedTimeRange === range && {
-                  backgroundColor: colors.primary[500],
-                },
-              ]}
-              onPress={() => setSelectedTimeRange(range)}
-            >
-              <Text
-                style={[
-                  styles.timeRangeText,
-                  {
-                    color: selectedTimeRange === range
-                      ? colors.white
-                      : colors.text.secondary,
-                  },
-                ]}
-              >
-                {range.charAt(0).toUpperCase() + range.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          <Text style={styles.title}>Your Digital Journey</Text>
+          <Text style={styles.subtitle}>Insights that empower your wellness</Text>
         </View>
 
         {error && (
@@ -261,55 +372,77 @@ export default function AnalyticsScreen() {
 
         {analyticsData && (
           <>
-            {/* Screen Time Overview */}
-            <Card style={styles.card} padding="large">
-              <Text style={styles.cardTitle}>Today's Screen Time</Text>
-              <View style={styles.screenTimeContainer}>
-                <Text style={styles.screenTimeValue}>
-                  {formatTime(analyticsData.screenTime.today)}
-                </Text>
-                <View style={styles.comparisonContainer}>
-                  <Text style={styles.comparisonText}>
-                    Yesterday: {formatTime(analyticsData.screenTime.yesterday)}
-                  </Text>
-                  <Text style={styles.comparisonText}>
-                    Week avg: {formatTime(analyticsData.screenTime.weekAverage)}
-                  </Text>
+            {/* Hero Stats Card */}
+            <Card style={styles.heroCard} padding="none">
+              <View style={styles.heroStats}>
+                <View style={styles.heroStatItem}>
+                  <Text style={styles.heroStatValue}>{formatTime(analyticsData.screenTime.today)}</Text>
+                  <Text style={styles.heroStatLabel}>Today</Text>
+                  <View style={styles.heroStatTrend}>
+                    {analyticsData.screenTime.today < analyticsData.screenTime.yesterday ? (
+                      <TrendingDown color={colors.success[500]} size={16} />
+                    ) : (
+                      <TrendingUp color={colors.error[500]} size={16} />
+                    )}
+                    <Text style={[
+                      styles.trendText,
+                      { color: analyticsData.screenTime.today < analyticsData.screenTime.yesterday ? colors.success[500] : colors.error[500] }
+                    ]}>
+                      vs yesterday
+                    </Text>
+                  </View>
+                </View>
+                
+                <View style={styles.heroStatItem}>
+                  <Text style={styles.heroStatValue}>{formatTime(analyticsData.screenTime.weekAverage)}</Text>
+                  <Text style={styles.heroStatLabel}>Week Avg</Text>
+                </View>
+                
+                <View style={styles.heroStatItem}>
+                  <Text style={styles.heroStatValue}>{analyticsData.goals.achieved ? '✅' : '⚠️'}</Text>
+                  <Text style={styles.heroStatLabel}>Goal Status</Text>
                 </View>
               </View>
-              
-              {/* Goal Progress */}
-              <View style={styles.goalContainer}>
-                <View style={styles.goalHeader}>
-                  <Text style={styles.goalText}>
-                    Daily Goal: {formatTime(analyticsData.goals.dailyLimit)}
-                  </Text>
-                  <Text style={[
-                    styles.goalStatus,
-                    { color: analyticsData.goals.achieved ? colors.success[500] : colors.warning[500] }
-                  ]}>
-                    {analyticsData.goals.achieved ? 'Achieved' : 'Over limit'}
-                  </Text>
+
+              {analyticsData.goals.achieved && (
+                <View style={styles.achievementBadge}>
+                  <Award color={colors.warning[600]} size={20} />
+                  <Text style={styles.achievementText}>Daily goal achieved! 🎉</Text>
                 </View>
-                <View style={styles.progressBar}>
-                  <View
-                    style={[
-                      styles.progressFill,
-                      {
-                        backgroundColor: analyticsData.goals.achieved
-                          ? colors.success[500]
-                          : colors.warning[500],
-                        width: `${Math.min((analyticsData.goals.currentUsage / analyticsData.goals.dailyLimit) * 100, 100)}%`,
-                      },
-                    ]}
-                  />
-                </View>
-              </View>
+              )}
             </Card>
+
+            {/* Time Range Selector */}
+            <View style={styles.timeRangeContainer}>
+              {(['week', 'month', 'year'] as const).map((range) => (
+                <TouchableOpacity
+                  key={range}
+                  style={[
+                    styles.timeRangeButton,
+                    selectedTimeRange === range && styles.timeRangeButtonActive,
+                  ]}
+                  onPress={() => setSelectedTimeRange(range)}
+                >
+                  <Text
+                    style={[
+                      styles.timeRangeText,
+                      selectedTimeRange === range ? styles.timeRangeTextActive : styles.timeRangeTextInactive,
+                    ]}
+                  >
+                    {range.charAt(0).toUpperCase() + range.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
             {/* Weekly Chart */}
             <Card style={styles.card} padding="large">
               <Text style={styles.cardTitle}>Weekly Trend</Text>
+              <Image 
+                source={{ uri: 'https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg' }}
+                style={styles.inspirationalImage}
+                resizeMode="cover"
+              />
               <LineChart
                 data={analyticsData.weeklyData}
                 width={screenWidth - 60}
@@ -320,7 +453,59 @@ export default function AnalyticsScreen() {
               />
             </Card>
 
-            {/* App Usage Breakdown */}
+            {/* Screen Time Details */}
+            <Card style={styles.card} padding="large">
+              <Text style={styles.cardTitle}>Today's Breakdown</Text>
+              <View style={styles.screenTimeContainer}>
+                <Text style={styles.screenTimeValue}>
+                  {formatTime(analyticsData.screenTime.today)}
+                </Text>
+                <View style={styles.comparisonContainer}>
+                  <View style={styles.comparisonItem}>
+                    <Text style={styles.comparisonLabel}>Yesterday</Text>
+                    <Text style={styles.comparisonValue}>{formatTime(analyticsData.screenTime.yesterday)}</Text>
+                  </View>
+                  <View style={styles.comparisonItem}>
+                    <Text style={styles.comparisonLabel}>Week Avg</Text>
+                    <Text style={styles.comparisonValue}>{formatTime(analyticsData.screenTime.weekAverage)}</Text>
+                  </View>
+                  <View style={styles.comparisonItem}>
+                    <Text style={styles.comparisonLabel}>Goal</Text>
+                    <Text style={styles.comparisonValue}>{formatTime(analyticsData.goals.dailyLimit)}</Text>
+                  </View>
+                </View>
+              </View>
+              
+              {/* Enhanced Goal Progress */}
+              <View style={styles.goalContainer}>
+                <View style={styles.goalHeader}>
+                  <Text style={styles.goalText}>
+                    Daily Goal Progress
+                  </Text>
+                  <Text style={[
+                    styles.goalStatus,
+                    analyticsData.goals.achieved ? styles.goalStatusAchieved : styles.goalStatusOverLimit
+                  ]}>
+                    {analyticsData.goals.achieved ? '🎯 Achieved' : '⚠️ Over Limit'}
+                  </Text>
+                </View>
+                <View style={styles.progressBar}>
+                  <View
+                    style={[
+                      styles.progressFill,
+                      {
+                        backgroundColor: analyticsData.goals.achieved
+                          ? colors.success[500]
+                          : colors.error[500],
+                        width: `${Math.min((analyticsData.goals.currentUsage / analyticsData.goals.dailyLimit) * 100, 100)}%`,
+                      },
+                    ]}
+                  />
+                </View>
+              </View>
+            </Card>
+
+            {/* Enhanced App Usage Breakdown */}
             <Card style={styles.card} padding="large">
               <Text style={styles.cardTitle}>App Categories</Text>
               <View style={styles.appUsageContainer}>
@@ -328,7 +513,15 @@ export default function AnalyticsScreen() {
                   <View key={index} style={styles.appUsageItem}>
                     <View style={styles.appUsageInfo}>
                       <View style={[styles.appColorIndicator, { backgroundColor: app.color }]} />
-                      <Text style={styles.appName}>{app.name}</Text>
+                      <View style={styles.appDetails}>
+                        <Text style={styles.appName}>{app.name}</Text>
+                        <View style={styles.appProgressBar}>
+                          <View style={[
+                            styles.appProgressFill,
+                            { backgroundColor: app.color, width: `${app.percentage}%` }
+                          ]} />
+                        </View>
+                      </View>
                     </View>
                     <View style={styles.appUsageStats}>
                       <Text style={styles.appTime}>{formatTime(app.time)}</Text>
