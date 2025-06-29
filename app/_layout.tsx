@@ -1,3 +1,4 @@
+import 'react-native-svg';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
