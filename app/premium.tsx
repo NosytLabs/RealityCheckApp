@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '../theme';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
-import { X, Check, Star, Zap, Shield, BarChart3 } from 'lucide-react-native';
+import { X, Check, Star, Zap, Shield, ChartBar as BarChart3 } from 'lucide-react-native';
 
 export default function PremiumScreen() {
   const { colors, typography, spacing } = useTheme();
