@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,19 +13,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../theme';
+import { useUserSettings } from '../../../hooks/useUserSettings';
+import { useToast } from '../../../components/common/Toast';
 import { Card } from '../../../components/common/Card';
 import { Button } from '../../../components/common/Button';
-import { ArrowLeft, Plus, Clock, Smartphone } from 'lucide-react-native';
-
-interface AppLimit {
-  id: string;
-  appName: string;
-  icon: string;
-  dailyLimit: number; // in minutes
-  currentUsage: number; // in minutes
-  enabled: boolean;
-  category: string;
-}
+import { ArrowLeft, Plus, Smartphone, Zap } from 'lucide-react-native';
 
 interface NewLimitForm {
   appName: string;
@@ -36,46 +28,10 @@ interface NewLimitForm {
 export default function AppUsageLimitsScreen() {
   const { colors, typography, spacing } = useTheme();
   const router = useRouter();
+  const { settings, loading, updateAppUsageLimits } = useUserSettings();
+  const { showToast } = useToast();
   
-  const [appLimits, setAppLimits] = useState<AppLimit[]>([
-    {
-      id: '1',
-      appName: 'Instagram',
-      icon: '📷',
-      dailyLimit: 60,
-      currentUsage: 45,
-      enabled: true,
-      category: 'Social Media',
-    },
-    {
-      id: '2',
-      appName: 'TikTok',
-      icon: '🎵',
-      dailyLimit: 30,
-      currentUsage: 35,
-      enabled: true,
-      category: 'Entertainment',
-    },
-    {
-      id: '3',
-      appName: 'YouTube',
-      icon: '📺',
-      dailyLimit: 90,
-      currentUsage: 25,
-      enabled: false,
-      category: 'Entertainment',
-    },
-    {
-      id: '4',
-      appName: 'Twitter',
-      icon: '🐦',
-      dailyLimit: 45,
-      currentUsage: 20,
-      enabled: true,
-      category: 'Social Media',
-    },
-  ]);
-
+  const [appLimits, setAppLimits] = useState(settings?.app_usage_limits || []);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newLimit, setNewLimit] = useState<NewLimitForm>({
     appName: '',
@@ -91,39 +47,51 @@ export default function AppUsageLimitsScreen() {
 
   const categories = ['Social Media', 'Entertainment', 'Productivity', 'Games', 'News', 'Other'];
 
+  useEffect(() => {
+    if (settings?.app_usage_limits) {
+      setAppLimits(settings.app_usage_limits);
+    }
+  }, [settings]);
+
   const handleToggleLimit = (id: string) => {
-    setAppLimits(prev => 
-      prev.map(limit => 
-        limit.id === id 
-          ? { ...limit, enabled: !limit.enabled }
-          : limit
-      )
+    const updatedLimits = appLim its.map(limit => 
+      limit.id === id 
+        ? { ...limit, enabled: !limit.enabled }
+        : limit
     );
+    setAppLimits(updatedLimits);
   };
 
   const handleUpdateLimit = (id: string, newLimitMinutes: number) => {
-    setAppLimits(prev => 
-      prev.map(limit => 
-        limit.id === id 
-          ? { ...limit, dailyLimit: newLimitMinutes }
-          : limit
-      )
+    const updatedLimits = appLimits.map(limit => 
+      limit.id === id 
+        ? { ...limit, dailyLimit: newLimitMinutes }
+        : limit
     );
+    setAppLimits(updatedLimits);
   };
 
-  const handleAddLimit = () => {
+  const handleAddLimit = async () => {
     if (!newLimit.appName.trim() || !newLimit.dailyLimit.trim()) {
-      Alert.alert('Error', 'Please fill in all required fields.');
+      showToast({
+        type: 'error',
+        title: 'Missing Information',
+        message: 'Please fill in all required fields.',
+      });
       return;
     }
 
     const limitMinutes = parseInt(newLimit.dailyLimit);
     if (isNaN(limitMinutes) || limitMinutes <= 0) {
-      Alert.alert('Error', 'Please enter a valid time limit in minutes.');
+      showToast({
+        type: 'error',
+        title: 'Invalid Input',
+        message: 'Please enter a valid time limit in minutes.',
+      });
       return;
     }
 
-    const newAppLimit: AppLimit = {
+    const newAppLimit = {
       id: Date.now().toString(),
       appName: newLimit.appName.trim(),
       icon: '📱',
@@ -133,15 +101,30 @@ export default function AppUsageLimitsScreen() {
       category: newLimit.category,
     };
 
-    setAppLimits(prev => [...prev, newAppLimit]);
-    setShowAddModal(false);
-    setNewLimit({
-      appName: '',
-      dailyLimit: '',
-      category: 'Social Media',
-    });
+    const updatedLimits = [...appLimits, newAppLimit];
+    setAppLimits(updatedLimits);
+    
+    try {
+      await updateAppUsageLimits(updatedLimits);
+      setShowAddModal(false);
+      setNewLimit({
+        appName: '',
+        dailyLimit: '',
+        category: 'Social Media',
+      });
 
-    Alert.alert('Success', `Limit added for ${newLimit.appName}`);
+      showToast({
+        type: 'success',
+        title: 'Limit Added! 🎯',
+        message: `Successfully added limit for ${newLimit.appName}`,
+      });
+    } catch (error: any) {
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: error.message || 'Failed to save app limit',
+      });
+    }
   };
 
   const handleRemoveLimit = (id: string) => {
@@ -154,8 +137,23 @@ export default function AppUsageLimitsScreen() {
         { 
           text: 'Remove', 
           style: 'destructive',
-          onPress: () => {
-            setAppLimits(prev => prev.filter(l => l.id !== id));
+          onPress: async () => {
+            const updatedLimits = appLimits.filter(l => l.id !== id);
+            setAppLimits(updatedLimits);
+            try {
+              await updateAppUsageLimits(updatedLimits);
+              showToast({
+                type: 'success',
+                title: 'Limit Removed',
+                message: 'App limit has been removed successfully.',
+              });
+            } catch (error: any) {
+              showToast({
+                type: 'error',
+                title: 'Error',
+                message: error.message || 'Failed to remove app limit',
+              });
+            }
           }
         }
       ]
@@ -201,12 +199,15 @@ export default function AppUsageLimitsScreen() {
       color: colors.text.primary,
       flex: 1,
       textAlign: 'center',
+      fontWeight: '700',
     },
     backButton: {
       padding: spacing.sm,
     },
     addButton: {
       padding: spacing.sm,
+      backgroundColor: colors.primary[500],
+      borderRadius: spacing.lg,
     },
     scrollContainer: {
       padding: spacing.lg,
@@ -218,6 +219,7 @@ export default function AppUsageLimitsScreen() {
       ...typography.textStyles.heading.md,
       color: colors.text.primary,
       marginBottom: spacing.md,
+      fontWeight: '700',
     },
     sectionDescription: {
       ...typography.textStyles.body.medium,
@@ -226,13 +228,15 @@ export default function AppUsageLimitsScreen() {
       marginBottom: spacing.lg,
     },
     appLimitCard: {
-      marginBottom: spacing.md,
+      marginBottom: spacing.lg,
+      borderRadius: spacing.lg,
+      overflow: 'hidden',
     },
     appLimitHeader: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: spacing.md,
+      marginBottom: spacing.lg,
     },
     appInfo: {
       flexDirection: 'row',
@@ -240,8 +244,8 @@ export default function AppUsageLimitsScreen() {
       flex: 1,
     },
     appIcon: {
-      fontSize: 24,
-      marginRight: spacing.md,
+      fontSize: 28,
+      marginRight: spacing.lg,
     },
     appDetails: {
       flex: 1,
@@ -249,12 +253,13 @@ export default function AppUsageLimitsScreen() {
     appName: {
       ...typography.textStyles.body.large,
       color: colors.text.primary,
-      fontWeight: '600',
+      fontWeight: '700',
       marginBottom: spacing.xs,
     },
     appCategory: {
       ...typography.textStyles.caption.lg,
       color: colors.text.secondary,
+      fontWeight: '600',
     },
     usageInfo: {
       alignItems: 'flex-end',
@@ -262,25 +267,25 @@ export default function AppUsageLimitsScreen() {
     usageText: {
       ...typography.textStyles.body.medium,
       color: colors.text.primary,
-      fontWeight: '500',
+      fontWeight: '600',
     },
     limitText: {
       ...typography.textStyles.caption.lg,
       color: colors.text.secondary,
     },
     progressContainer: {
-      marginBottom: spacing.md,
+      marginBottom: spacing.lg,
     },
     progressBar: {
-      height: 8,
+      height: 12,
       backgroundColor: colors.gray[200],
-      borderRadius: 4,
+      borderRadius: spacing.md,
       overflow: 'hidden',
-      marginBottom: spacing.sm,
+      marginBottom: spacing.md,
     },
     progressFill: {
       height: '100%',
-      borderRadius: 4,
+      borderRadius: spacing.md,
     },
     progressInfo: {
       flexDirection: 'row',
@@ -289,7 +294,7 @@ export default function AppUsageLimitsScreen() {
     },
     progressPercentage: {
       ...typography.textStyles.caption.lg,
-      fontWeight: '600',
+      fontWeight: '700',
     },
     limitActions: {
       flexDirection: 'row',
@@ -297,23 +302,32 @@ export default function AppUsageLimitsScreen() {
       alignItems: 'center',
     },
     editLimitButton: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: spacing.md,
-      borderWidth: 1,
-      borderColor: colors.border.primary,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderRadius: spacing.lg,
+      backgroundColor: colors.primary[500],
+      flex: 1,
+      marginRight: spacing.sm,
     },
     editLimitText: {
-      ...typography.textStyles.caption.lg,
-      color: colors.text.secondary,
+      ...typography.textStyles.button.sm,
+      color: colors.white,
+      marginLeft: spacing.xs,
+      fontWeight: '700',
     },
     removeLimitButton: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderRadius: spacing.lg,
+      borderWidth: 1,
+      borderColor: colors.error[300],
     },
     removeLimitText: {
-      ...typography.textStyles.caption.lg,
+      ...typography.textStyles.button.sm,
       color: colors.error[500],
+      fontWeight: '600',
     },
     globalSettingsCard: {
       marginBottom: spacing.lg,
@@ -322,7 +336,7 @@ export default function AppUsageLimitsScreen() {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: spacing.md,
+      paddingVertical: spacing.lg,
       borderBottomWidth: 1,
       borderBottomColor: colors.border.primary,
     },
@@ -336,7 +350,7 @@ export default function AppUsageLimitsScreen() {
     settingTitle: {
       ...typography.textStyles.body.medium,
       color: colors.text.primary,
-      fontWeight: '500',
+      fontWeight: '600',
       marginBottom: spacing.xs,
     },
     settingDescription: {
@@ -356,6 +370,7 @@ export default function AppUsageLimitsScreen() {
       color: colors.text.primary,
       textAlign: 'center',
       marginBottom: spacing.sm,
+      fontWeight: '700',
     },
     emptyStateText: {
       ...typography.textStyles.body.medium,
@@ -383,6 +398,7 @@ export default function AppUsageLimitsScreen() {
       color: colors.text.primary,
       marginBottom: spacing.lg,
       textAlign: 'center',
+      fontWeight: '700',
     },
     formGroup: {
       marginBottom: spacing.md,
@@ -391,7 +407,7 @@ export default function AppUsageLimitsScreen() {
       ...typography.textStyles.body.medium,
       color: colors.text.primary,
       marginBottom: spacing.sm,
-      fontWeight: '500',
+      fontWeight: '600',
     },
     input: {
       borderWidth: 1,
@@ -423,6 +439,7 @@ export default function AppUsageLimitsScreen() {
     },
     modalButtonText: {
       ...typography.textStyles.button.md,
+      fontWeight: '700',
     },
     cancelButtonText: {
       color: colors.text.secondary,
@@ -447,7 +464,7 @@ export default function AppUsageLimitsScreen() {
           style={styles.addButton} 
           onPress={() => setShowAddModal(true)}
         >
-          <Plus color={colors.primary[500]} size={24} />
+          <Plus color={colors.white} size={24} />
         </TouchableOpacity>
       </View>
 
@@ -549,6 +566,7 @@ export default function AppUsageLimitsScreen() {
                             );
                           }}
                         >
+                          <Zap color={colors.white} size={18} />
                           <Text style={styles.editLimitText}>Edit Limit</Text>
                         </TouchableOpacity>
                         
@@ -570,7 +588,7 @@ export default function AppUsageLimitsScreen() {
                 <Smartphone color={colors.text.secondary} size={48} style={styles.emptyStateIcon} />
                 <Text style={styles.emptyStateTitle}>No App Limits Set</Text>
                 <Text style={styles.emptyStateText}>
-                  Tap the + button to add your first app limit and start managing your screen time.
+                  Tap the + button to add your first app limit and start managing your screen time like a pro!
                 </Text>
                 <Button
                   title="Add App Limit"

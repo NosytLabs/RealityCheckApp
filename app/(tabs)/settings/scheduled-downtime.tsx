@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,44 +11,19 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../theme';
+import { useUserSettings } from '../../../hooks/useUserSettings';
+import { useToast } from '../../../components/common/Toast';
 import { Card } from '../../../components/common/Card';
 import { Button } from '../../../components/common/Button';
-import { ArrowLeft, Moon, Sun, Clock } from 'lucide-react-native';
-
-interface DowntimeSchedule {
-  id: string;
-  name: string;
-  startTime: string;
-  endTime: string;
-  days: string[];
-  enabled: boolean;
-  allowedApps: string[];
-}
+import { ArrowLeft, Moon, Sun, Clock, Plus, Save } from 'lucide-react-native';
 
 export default function ScheduledDowntimeScreen() {
   const { colors, typography, spacing } = useTheme();
   const router = useRouter();
+  const { settings, loading, updateDowntimeSchedules } = useUserSettings();
+  const { showToast } = useToast();
   
-  const [downtimeSchedules, setDowntimeSchedules] = useState<DowntimeSchedule[]>([
-    {
-      id: '1',
-      name: 'Sleep Time',
-      startTime: '22:00',
-      endTime: '07:00',
-      days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-      enabled: true,
-      allowedApps: ['Phone', 'Messages', 'Clock'],
-    },
-    {
-      id: '2',
-      name: 'Work Focus',
-      startTime: '09:00',
-      endTime: '17:00',
-      days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-      enabled: false,
-      allowedApps: ['Email', 'Calendar', 'Notes', 'Slack'],
-    },
-  ]);
+  const [downtimeSchedules, setDowntimeSchedules] = useState(settings?.downtime_schedules || []);
 
   const [globalSettings, setGlobalSettings] = useState({
     enableNotifications: true,
@@ -60,18 +35,44 @@ export default function ScheduledDowntimeScreen() {
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const dayAbbreviations = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+  useEffect(() => {
+    if (settings?.downtime_schedules) {
+      setDowntimeSchedules(settings.downtime_schedules);
+    }
+  }, [settings]);
+
   const handleToggleSchedule = (id: string) => {
-    setDowntimeSchedules(prev => 
-      prev.map(schedule => 
-        schedule.id === id 
-          ? { ...schedule, enabled: !schedule.enabled }
-          : schedule
-      )
+    const updatedSchedules = downtimeSchedules.map(schedule => 
+      schedule.id === id 
+        ? { ...schedule, enabled: !schedule.enabled }
+        : schedule
     );
+    setDowntimeSchedules(updatedSchedules);
+  };
+
+  const handleSaveSchedules = async () => {
+    try {
+      await updateDowntimeSchedules(downtimeSchedules);
+      showToast({
+        type: 'success',
+        title: 'Schedules Saved! 🌙',
+        message: 'Your downtime schedules have been updated successfully.',
+      });
+    } catch (error: any) {
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: error.message || 'Failed to save schedules',
+      });
+    }
   };
 
   const handleEditSchedule = (id: string) => {
-    Alert.alert('Coming Soon', 'Schedule editing will be available in a future update.');
+    showToast({
+      type: 'info',
+      title: 'Coming Soon',
+      message: 'Schedule editing will be available in a future update.',
+    });
   };
 
   const handleDeleteSchedule = (id: string) => {
@@ -84,8 +85,23 @@ export default function ScheduledDowntimeScreen() {
         { 
           text: 'Delete', 
           style: 'destructive',
-          onPress: () => {
-            setDowntimeSchedules(prev => prev.filter(s => s.id !== id));
+          onPress: async () => {
+            const updatedSchedules = downtimeSchedules.filter(s => s.id !== id);
+            setDowntimeSchedules(updatedSchedules);
+            try {
+              await updateDowntimeSchedules(updatedSchedules);
+              showToast({
+                type: 'success',
+                title: 'Schedule Deleted',
+                message: 'The schedule has been removed successfully.',
+              });
+            } catch (error: any) {
+              showToast({
+                type: 'error',
+                title: 'Error',
+                message: error.message || 'Failed to delete schedule',
+              });
+            }
           }
         }
       ]
@@ -93,7 +109,11 @@ export default function ScheduledDowntimeScreen() {
   };
 
   const handleAddSchedule = () => {
-    Alert.alert('Coming Soon', 'Adding new schedules will be available in a future update.');
+    showToast({
+      type: 'info',
+      title: 'Coming Soon',
+      message: 'Adding new schedules will be available in a future update.',
+    });
   };
 
   const formatTime = (time: string): string => {
@@ -117,12 +137,12 @@ export default function ScheduledDowntimeScreen() {
 
   const getScheduleIcon = (name: string) => {
     if (name.toLowerCase().includes('sleep') || name.toLowerCase().includes('night')) {
-      return <Moon color={colors.primary[500]} size={24} />;
+      return <Moon color={colors.primary[500]} size={28} />;
     }
     if (name.toLowerCase().includes('work') || name.toLowerCase().includes('focus')) {
-      return <Sun color={colors.warning[500]} size={24} />;
+      return <Sun color={colors.warning[500]} size={28} />;
     }
-    return <Clock color={colors.text.secondary} size={24} />;
+    return <Clock color={colors.text.secondary} size={28} />;
   };
 
   const styles = StyleSheet.create({
@@ -145,12 +165,34 @@ export default function ScheduledDowntimeScreen() {
       color: colors.text.primary,
       flex: 1,
       textAlign: 'center',
+      fontWeight: '700',
     },
     backButton: {
       padding: spacing.sm,
     },
-    placeholder: {
-      width: 60,
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    addButton: {
+      padding: spacing.sm,
+      backgroundColor: colors.primary[500],
+      borderRadius: spacing.lg,
+      marginRight: spacing.sm,
+    },
+    saveButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.success[500],
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: spacing.lg,
+    },
+    saveButtonText: {
+      ...typography.textStyles.button.sm,
+      color: colors.white,
+      marginLeft: spacing.xs,
+      fontWeight: '700',
     },
     scrollContainer: {
       padding: spacing.lg,
@@ -162,6 +204,7 @@ export default function ScheduledDowntimeScreen() {
       ...typography.textStyles.heading.md,
       color: colors.text.primary,
       marginBottom: spacing.md,
+      fontWeight: '700',
     },
     sectionDescription: {
       ...typography.textStyles.body.medium,
@@ -170,13 +213,15 @@ export default function ScheduledDowntimeScreen() {
       marginBottom: spacing.lg,
     },
     scheduleCard: {
-      marginBottom: spacing.md,
+      marginBottom: spacing.lg,
+      borderRadius: spacing.lg,
+      overflow: 'hidden',
     },
     scheduleHeader: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: spacing.md,
+      marginBottom: spacing.lg,
     },
     scheduleInfo: {
       flexDirection: 'row',
@@ -184,7 +229,10 @@ export default function ScheduledDowntimeScreen() {
       flex: 1,
     },
     scheduleIcon: {
-      marginRight: spacing.md,
+      marginRight: spacing.lg,
+      backgroundColor: colors.gray[50],
+      borderRadius: spacing.lg,
+      padding: spacing.md,
     },
     scheduleDetails: {
       flex: 1,
@@ -192,37 +240,41 @@ export default function ScheduledDowntimeScreen() {
     scheduleName: {
       ...typography.textStyles.body.large,
       color: colors.text.primary,
-      fontWeight: '600',
+      fontWeight: '700',
       marginBottom: spacing.xs,
     },
     scheduleTime: {
       ...typography.textStyles.body.medium,
       color: colors.text.secondary,
       marginBottom: spacing.xs,
+      fontWeight: '600',
     },
     scheduleDays: {
       ...typography.textStyles.caption.lg,
       color: colors.text.secondary,
+      fontWeight: '500',
     },
     scheduleActions: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginTop: spacing.md,
-      paddingTop: spacing.md,
+      marginTop: spacing.lg,
+      paddingTop: spacing.lg,
       borderTopWidth: 1,
       borderTopColor: colors.border.primary,
     },
     actionButton: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: spacing.md,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderRadius: spacing.lg,
       borderWidth: 1,
       borderColor: colors.border.primary,
+      backgroundColor: colors.white,
     },
     actionButtonText: {
       ...typography.textStyles.caption.lg,
       color: colors.text.secondary,
+      fontWeight: '600',
     },
     deleteButton: {
       borderColor: colors.error[300],
@@ -231,12 +283,16 @@ export default function ScheduledDowntimeScreen() {
       color: colors.error[500],
     },
     allowedApps: {
-      marginTop: spacing.sm,
+      marginTop: spacing.md,
+      backgroundColor: colors.gray[50],
+      borderRadius: spacing.md,
+      padding: spacing.md,
     },
     allowedAppsLabel: {
       ...typography.textStyles.caption.lg,
       color: colors.text.secondary,
       marginBottom: spacing.xs,
+      fontWeight: '600',
     },
     allowedAppsList: {
       ...typography.textStyles.caption.md,
@@ -249,14 +305,15 @@ export default function ScheduledDowntimeScreen() {
       borderWidth: 2,
       borderColor: colors.border.primary,
       borderStyle: 'dashed',
+      borderRadius: spacing.lg,
     },
     addScheduleIcon: {
-      marginBottom: spacing.md,
+      marginBottom: spacing.lg,
     },
     addScheduleTitle: {
       ...typography.textStyles.body.large,
       color: colors.text.primary,
-      fontWeight: '600',
+      fontWeight: '700',
       marginBottom: spacing.sm,
     },
     addScheduleDescription: {
@@ -273,7 +330,7 @@ export default function ScheduledDowntimeScreen() {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: spacing.md,
+      paddingVertical: spacing.lg,
       borderBottomWidth: 1,
       borderBottomColor: colors.border.primary,
     },
@@ -287,7 +344,7 @@ export default function ScheduledDowntimeScreen() {
     settingTitle: {
       ...typography.textStyles.body.medium,
       color: colors.text.primary,
-      fontWeight: '500',
+      fontWeight: '600',
       marginBottom: spacing.xs,
     },
     settingDescription: {
@@ -307,13 +364,13 @@ export default function ScheduledDowntimeScreen() {
       color: colors.text.primary,
       textAlign: 'center',
       marginBottom: spacing.sm,
+      fontWeight: '700',
     },
     emptyStateText: {
       ...typography.textStyles.body.medium,
       color: colors.text.secondary,
       textAlign: 'center',
       lineHeight: 22,
-      marginBottom: spacing.lg,
     },
   });
 
@@ -328,7 +385,21 @@ export default function ScheduledDowntimeScreen() {
           <ArrowLeft color={colors.text.primary} size={24} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Scheduled Downtime</Text>
-        <View style={styles.placeholder} />
+        <View style={styles.headerActions}>
+          <TouchableOpacity 
+            style={styles.addButton} 
+            onPress={handleAddSchedule}
+          >
+            <Plus color={colors.white} size={24} />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.saveButton} 
+            onPress={handleSaveSchedules}
+          >
+            <Save color={colors.white} size={18} />
+            <Text style={styles.saveButtonText}>Save</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView 
@@ -427,7 +498,7 @@ export default function ScheduledDowntimeScreen() {
                 <Text style={styles.emptyStateTitle}>No Schedules Set</Text>
                 <Text style={styles.emptyStateText}>
                   Create your first downtime schedule to automatically limit device usage 
-                  during specific times.
+                  during specific times and build healthier digital habits.
                 </Text>
                 <Button
                   title="Create Schedule"

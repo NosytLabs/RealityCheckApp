@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,65 +11,27 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../theme';
+import { useUserSettings } from '../../../hooks/useUserSettings';
+import { useToast } from '../../../components/common/Toast';
 import { Card } from '../../../components/common/Card';
 import { Button } from '../../../components/common/Button';
-import { ArrowLeft } from 'lucide-react-native';
-
-interface InterventionSetting {
-  id: string;
-  title: string;
-  description: string;
-  enabled: boolean;
-  frequency: 'low' | 'medium' | 'high';
-  type: 'time_based' | 'usage_based' | 'behavior_based';
-}
+import { ArrowLeft, Zap, Save } from 'lucide-react-native';
 
 export default function InterventionSettingsScreen() {
   const { colors, typography, spacing } = useTheme();
   const router = useRouter();
+  const { settings, loading, updateInterventionSettings } = useUserSettings();
+  const { showToast } = useToast();
   
-  const [interventions, setInterventions] = useState<InterventionSetting[]>([
-    {
-      id: 'reality_check',
-      title: 'Reality Check Prompts',
-      description: 'Gentle reminders to pause and reflect on your current activity',
-      enabled: true,
-      frequency: 'medium',
-      type: 'time_based',
-    },
-    {
-      id: 'mindful_breathing',
-      title: 'Breathing Exercises',
-      description: 'Guided breathing sessions when stress is detected',
-      enabled: true,
-      frequency: 'low',
-      type: 'behavior_based',
-    },
-    {
-      id: 'usage_alerts',
-      title: 'Usage Limit Alerts',
-      description: 'Notifications when approaching daily usage limits',
-      enabled: false,
-      frequency: 'high',
-      type: 'usage_based',
-    },
-    {
-      id: 'focus_reminders',
-      title: 'Focus Session Reminders',
-      description: 'Suggestions to start focused work sessions',
-      enabled: true,
-      frequency: 'medium',
-      type: 'time_based',
-    },
-    {
-      id: 'digital_detox',
-      title: 'Digital Detox Suggestions',
-      description: 'Recommendations for device-free activities',
-      enabled: false,
-      frequency: 'low',
-      type: 'behavior_based',
-    },
-  ]);
+  const [interventions, setInterventions] = useState(
+    settings?.intervention_settings || {
+      reality_check: { enabled: true, frequency: 'medium' },
+      mindful_breathing: { enabled: true, frequency: 'low' },
+      usage_alerts: { enabled: false, frequency: 'high' },
+      focus_reminders: { enabled: true, frequency: 'medium' },
+      digital_detox: { enabled: false, frequency: 'low' },
+    }
+  );
 
   const [globalSettings, setGlobalSettings] = useState({
     enableDuringFocus: false,
@@ -78,32 +40,85 @@ export default function InterventionSettingsScreen() {
     respectDoNotDisturb: true,
   });
 
+  useEffect(() => {
+    if (settings?.intervention_settings) {
+      setInterventions(settings.intervention_settings);
+    }
+  }, [settings]);
+
+  const interventionTypes = [
+    {
+      id: 'reality_check',
+      title: 'Reality Check Prompts',
+      description: 'Gentle reminders to pause and reflect on your current activity',
+      icon: '🧘',
+      type: 'time_based',
+    },
+    {
+      id: 'mindful_breathing',
+      title: 'Breathing Exercises',
+      description: 'Guided breathing sessions when stress is detected',
+      icon: '🌬️',
+      type: 'behavior_based',
+    },
+    {
+      id: 'usage_alerts',
+      title: 'Usage Limit Alerts',
+      description: 'Notifications when approaching daily usage limits',
+      icon: '⚠️',
+      type: 'usage_based',
+    },
+    {
+      id: 'focus_reminders',
+      title: 'Focus Session Reminders',
+      description: 'Suggestions to start focused work sessions',
+      icon: '🎯',
+      type: 'time_based',
+    },
+    {
+      id: 'digital_detox',
+      title: 'Digital Detox Suggestions',
+      description: 'Recommendations for device-free activities',
+      icon: '🌱',
+      type: 'behavior_based',
+    },
+  ];
+
   const handleToggleIntervention = (id: string) => {
-    setInterventions(prev => 
-      prev.map(intervention => 
-        intervention.id === id 
-          ? { ...intervention, enabled: !intervention.enabled }
-          : intervention
-      )
-    );
+    setInterventions(prev => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        enabled: !prev[id].enabled
+      }
+    }));
   };
 
   const handleFrequencyChange = (id: string, frequency: 'low' | 'medium' | 'high') => {
-    setInterventions(prev => 
-      prev.map(intervention => 
-        intervention.id === id 
-          ? { ...intervention, frequency }
-          : intervention
-      )
-    );
+    setInterventions(prev => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        frequency
+      }
+    }));
   };
 
-  const handleSaveSettings = () => {
-    Alert.alert(
-      'Settings Saved',
-      'Your intervention preferences have been updated successfully.',
-      [{ text: 'OK' }]
-    );
+  const handleSaveSettings = async () => {
+    try {
+      await updateInterventionSettings(interventions);
+      showToast({
+        type: 'success',
+        title: 'Settings Saved! ✨',
+        message: 'Your intervention preferences have been updated successfully.',
+      });
+    } catch (error: any) {
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: error.message || 'Failed to save settings',
+      });
+    }
   };
 
   const handleResetToDefaults = () => {
@@ -116,21 +131,25 @@ export default function InterventionSettingsScreen() {
           text: 'Reset', 
           style: 'destructive',
           onPress: () => {
-            // Reset to default values
-            setInterventions(prev => 
-              prev.map(intervention => ({
-                ...intervention,
-                enabled: intervention.id === 'reality_check' || intervention.id === 'mindful_breathing' || intervention.id === 'focus_reminders',
-                frequency: 'medium',
-              }))
-            );
+            const defaultSettings = {
+              reality_check: { enabled: true, frequency: 'medium' as const },
+              mindful_breathing: { enabled: true, frequency: 'low' as const },
+              usage_alerts: { enabled: false, frequency: 'high' as const },
+              focus_reminders: { enabled: true, frequency: 'medium' as const },
+              digital_detox: { enabled: false, frequency: 'low' as const },
+            };
+            setInterventions(defaultSettings);
             setGlobalSettings({
               enableDuringFocus: false,
               enableDuringDowntime: true,
               adaptiveFrequency: true,
               respectDoNotDisturb: true,
             });
-            Alert.alert('Reset Complete', 'Settings have been reset to defaults.');
+            showToast({
+              type: 'success',
+              title: 'Reset Complete',
+              message: 'Settings have been reset to defaults.',
+            });
           }
         }
       ]
@@ -175,12 +194,24 @@ export default function InterventionSettingsScreen() {
       color: colors.text.primary,
       flex: 1,
       textAlign: 'center',
+      fontWeight: '700',
     },
     backButton: {
       padding: spacing.sm,
     },
-    placeholder: {
-      width: 60,
+    saveButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.primary[500],
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: spacing.lg,
+    },
+    saveButtonText: {
+      ...typography.textStyles.button.sm,
+      color: colors.white,
+      marginLeft: spacing.xs,
+      fontWeight: '700',
     },
     scrollContainer: {
       padding: spacing.lg,
@@ -192,6 +223,7 @@ export default function InterventionSettingsScreen() {
       ...typography.textStyles.heading.md,
       color: colors.text.primary,
       marginBottom: spacing.md,
+      fontWeight: '700',
     },
     sectionDescription: {
       ...typography.textStyles.body.medium,
@@ -200,22 +232,33 @@ export default function InterventionSettingsScreen() {
       marginBottom: spacing.lg,
     },
     interventionCard: {
-      marginBottom: spacing.md,
+      marginBottom: spacing.lg,
+      borderRadius: spacing.lg,
+      overflow: 'hidden',
     },
     interventionHeader: {
       flexDirection: 'row',
+      alignItems: 'center',
       justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: spacing.sm,
+      marginBottom: spacing.md,
     },
     interventionInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
       flex: 1,
       marginRight: spacing.md,
+    },
+    interventionIcon: {
+      fontSize: 28,
+      marginRight: spacing.lg,
+    },
+    interventionDetails: {
+      flex: 1,
     },
     interventionTitle: {
       ...typography.textStyles.body.large,
       color: colors.text.primary,
-      fontWeight: '600',
+      fontWeight: '700',
       marginBottom: spacing.xs,
     },
     interventionDescription: {
@@ -224,16 +267,16 @@ export default function InterventionSettingsScreen() {
       lineHeight: 20,
     },
     frequencyContainer: {
-      marginTop: spacing.md,
-      paddingTop: spacing.md,
+      marginTop: spacing.lg,
+      paddingTop: spacing.lg,
       borderTopWidth: 1,
       borderTopColor: colors.border.primary,
     },
     frequencyLabel: {
       ...typography.textStyles.body.medium,
       color: colors.text.primary,
-      fontWeight: '500',
-      marginBottom: spacing.sm,
+      fontWeight: '600',
+      marginBottom: spacing.md,
     },
     frequencyOptions: {
       flexDirection: 'row',
@@ -241,20 +284,26 @@ export default function InterventionSettingsScreen() {
     },
     frequencyOption: {
       flex: 1,
-      paddingVertical: spacing.sm,
+      paddingVertical: spacing.md,
       paddingHorizontal: spacing.xs,
-      borderRadius: spacing.md,
+      borderRadius: spacing.lg,
       alignItems: 'center',
       marginHorizontal: spacing.xs,
-      borderWidth: 1,
+      borderWidth: 2,
       borderColor: colors.border.primary,
+      backgroundColor: colors.white,
     },
     frequencyOptionActive: {
       borderWidth: 2,
+      shadowColor: colors.primary[500],
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
     },
     frequencyOptionText: {
       ...typography.textStyles.caption.lg,
-      fontWeight: '600',
+      fontWeight: '700',
       marginBottom: 2,
     },
     frequencyOptionDescription: {
@@ -268,7 +317,7 @@ export default function InterventionSettingsScreen() {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: spacing.md,
+      paddingVertical: spacing.lg,
       borderBottomWidth: 1,
       borderBottomColor: colors.border.primary,
     },
@@ -282,7 +331,7 @@ export default function InterventionSettingsScreen() {
     settingTitle: {
       ...typography.textStyles.body.medium,
       color: colors.text.primary,
-      fontWeight: '500',
+      fontWeight: '600',
       marginBottom: spacing.xs,
     },
     settingDescription: {
@@ -299,7 +348,7 @@ export default function InterventionSettingsScreen() {
       flex: 1,
       marginRight: spacing.sm,
     },
-    saveButton: {
+    saveMainButton: {
       flex: 1,
       marginLeft: spacing.sm,
     },
@@ -317,7 +366,13 @@ export default function InterventionSettingsScreen() {
           <ArrowLeft color={colors.text.primary} size={24} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mindful Interventions</Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity 
+          style={styles.saveButton} 
+          onPress={handleSaveSettings}
+        >
+          <Save color={colors.white} size={18} />
+          <Text style={styles.saveButtonText}>Save</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView 
@@ -337,27 +392,30 @@ export default function InterventionSettingsScreen() {
         {/* Individual Interventions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Intervention Types</Text>
-          {interventions.map((intervention, index) => (
+          {interventionTypes.map((intervention) => (
             <Card key={intervention.id} style={styles.interventionCard} padding="large">
               <View style={styles.interventionHeader}>
                 <View style={styles.interventionInfo}>
-                  <Text style={styles.interventionTitle}>{intervention.title}</Text>
-                  <Text style={styles.interventionDescription}>
-                    {intervention.description}
-                  </Text>
+                  <Text style={styles.interventionIcon}>{intervention.icon}</Text>
+                  <View style={styles.interventionDetails}>
+                    <Text style={styles.interventionTitle}>{intervention.title}</Text>
+                    <Text style={styles.interventionDescription}>
+                      {intervention.description}
+                    </Text>
+                  </View>
                 </View>
                 <Switch
-                  value={intervention.enabled}
+                  value={interventions[intervention.id]?.enabled || false}
                   onValueChange={() => handleToggleIntervention(intervention.id)}
                   trackColor={{ 
                     false: colors.gray[300], 
                     true: colors.primary[200] 
                   }}
-                  thumbColor={intervention.enabled ? colors.primary[500] : colors.gray[500]}
+                  thumbColor={interventions[intervention.id]?.enabled ? colors.primary[500] : colors.gray[500]}
                 />
               </View>
 
-              {intervention.enabled && (
+              {interventions[intervention.id]?.enabled && (
                 <View style={styles.frequencyContainer}>
                   <Text style={styles.frequencyLabel}>Frequency</Text>
                   <View style={styles.frequencyOptions}>
@@ -366,7 +424,7 @@ export default function InterventionSettingsScreen() {
                         key={freq}
                         style={[
                           styles.frequencyOption,
-                          intervention.frequency === freq && {
+                          interventions[intervention.id]?.frequency === freq && {
                             ...styles.frequencyOptionActive,
                             borderColor: getFrequencyColor(freq),
                             backgroundColor: `${getFrequencyColor(freq)}10`,
@@ -376,13 +434,13 @@ export default function InterventionSettingsScreen() {
                       >
                         <Text style={[
                           styles.frequencyOptionText,
-                          { color: intervention.frequency === freq ? getFrequencyColor(freq) : colors.text.secondary }
+                          { color: interventions[intervention.id]?.frequency === freq ? getFrequencyColor(freq) : colors.text.secondary }
                         ]}>
                           {freq.charAt(0).toUpperCase() + freq.slice(1)}
                         </Text>
                         <Text style={[
                           styles.frequencyOptionDescription,
-                          { color: intervention.frequency === freq ? getFrequencyColor(freq) : colors.text.tertiary }
+                          { color: interventions[intervention.id]?.frequency === freq ? getFrequencyColor(freq) : colors.text.tertiary }
                         ]}>
                           {getFrequencyDescription(freq)}
                         </Text>
@@ -493,7 +551,7 @@ export default function InterventionSettingsScreen() {
           <Button
             title="Save Settings"
             onPress={handleSaveSettings}
-            style={styles.saveButton}
+            style={styles.saveMainButton}
             testID="save-settings-button"
           />
         </View>

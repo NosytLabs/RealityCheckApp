@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../theme';
@@ -7,7 +7,7 @@ import { useApp } from '../../providers/AppProvider';
 import { useToast } from '../../components/common/Toast';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
-import { Plus, Zap, Moon, Target, TrendingUp, Award, Clock, Users } from 'lucide-react-native';
+import { Plus, Zap, Moon, Target, TrendingUp, Award, Clock, Users, Sparkles } from 'lucide-react-native';
 import { supabase, checkSupabaseConnection } from '../../lib/supabase';
 
 interface DashboardStats {
@@ -53,21 +53,21 @@ export default function DashboardScreen() {
     {
       id: 'reality-check',
       title: 'Reality Check',
-      description: 'Take a moment to reflect',
+      description: 'Take a mindful moment',
       icon: <Zap color={colors.primary[500]} size={24} />,
+      gradient: [colors.primary[500], colors.primary[600]],
       onPress: () => {
         if (Platform.OS === 'web') {
           showToast({
             type: 'info',
-            title: 'Reality Check',
+            title: 'Reality Check ✨',
             message: 'This feature works best on mobile devices with camera access.',
           });
         } else {
-          // Navigate to reality check creation
           showToast({
             type: 'success',
-            title: 'Reality Check Started',
-            message: 'Take a moment to be present and mindful.',
+            title: 'Reality Check Started 🧘',
+            message: 'Take a deep breath and be present in this moment.',
           });
         }
       },
@@ -77,13 +77,15 @@ export default function DashboardScreen() {
       title: 'Focus Mode',
       description: 'Start a focused session',
       icon: <Target color={colors.success[500]} size={24} />,
+      gradient: [colors.success[500], colors.success[600]],
       onPress: () => router.push('/focus-mode'),
     },
     {
       id: 'downtime',
       title: 'Time Off',
-      description: 'Schedule a break',
+      description: 'Schedule a digital break',
       icon: <Moon color={colors.warning[500]} size={24} />,
+      gradient: [colors.warning[500], colors.warning[600]],
       onPress: () => router.push('/(tabs)/offline'),
     },
   ];
@@ -220,16 +222,45 @@ export default function DashboardScreen() {
       padding: spacing.lg,
     },
     header: {
-      marginBottom: spacing.xl,
+      padding: spacing.lg,
+      paddingBottom: spacing.md,
+      background: `linear-gradient(135deg, ${colors.primary[500]}, ${colors.secondary[500]})`,
     },
     greeting: {
-      ...typography.textStyles.heading.lg,
+      ...typography.textStyles.heading['2xl'],
       color: colors.text.primary,
       marginBottom: spacing.sm,
+      fontWeight: '800',
     },
     subtitle: {
       ...typography.textStyles.body.large,
       color: colors.text.secondary,
+    },
+    heroCard: {
+      marginHorizontal: spacing.lg,
+      marginTop: -spacing.xl,
+      marginBottom: spacing.lg,
+      backgroundColor: colors.white,
+      borderRadius: spacing.lg,
+      padding: spacing.xl,
+      shadowColor: colors.primary[500],
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.15,
+      shadowRadius: 20,
+      elevation: 8,
+    },
+    welcomeMessage: {
+      ...typography.textStyles.body.large,
+      color: colors.text.primary,
+      textAlign: 'center',
+      marginBottom: spacing.lg,
+      fontWeight: '600',
+    },
+    inspirationalImage: {
+      width: '100%',
+      height: 120,
+      borderRadius: spacing.md,
+      marginBottom: spacing.lg,
     },
     statsContainer: {
       flexDirection: 'row',
@@ -241,44 +272,57 @@ export default function DashboardScreen() {
       width: '48%',
       marginBottom: spacing.md,
       alignItems: 'center',
+      backgroundColor: colors.gray[50],
+      borderRadius: spacing.lg,
+      padding: spacing.lg,
     },
     statIcon: {
       marginBottom: spacing.sm,
     },
     statValue: {
-      ...typography.textStyles.heading['2xl'],
+      ...typography.textStyles.heading.xl,
       color: colors.primary[500],
       marginBottom: spacing.xs,
       textAlign: 'center',
+      fontWeight: '800',
     },
     statLabel: {
       ...typography.textStyles.body.medium,
       color: colors.text.secondary,
       textAlign: 'center',
+      fontWeight: '600',
     },
     statSubtext: {
       ...typography.textStyles.caption.lg,
       color: colors.text.tertiary,
       textAlign: 'center',
       marginTop: spacing.xs,
+      fontWeight: '500',
     },
     sectionTitle: {
       ...typography.textStyles.heading.lg,
       color: colors.text.primary,
-      marginBottom: spacing.md,
+      marginBottom: spacing.lg,
+      fontWeight: '700',
     },
     quickActionsContainer: {
       marginBottom: spacing.xl,
     },
     actionCard: {
       marginBottom: spacing.md,
+      borderRadius: spacing.lg,
+      overflow: 'hidden',
     },
     actionContent: {
       flexDirection: 'row',
       alignItems: 'center',
+      padding: spacing.lg,
     },
     actionIcon: {
-      marginRight: spacing.md,
+      marginRight: spacing.lg,
+      backgroundColor: colors.white,
+      borderRadius: spacing.lg,
+      padding: spacing.md,
     },
     actionText: {
       flex: 1,
@@ -286,31 +330,38 @@ export default function DashboardScreen() {
     actionTitle: {
       ...typography.textStyles.body.large,
       color: colors.text.primary,
-      fontWeight: '600',
+      fontWeight: '700',
       marginBottom: spacing.xs,
     },
     actionDescription: {
       ...typography.textStyles.body.medium,
       color: colors.text.secondary,
+      fontWeight: '500',
     },
     recentActivity: {
       marginBottom: spacing.xl,
     },
     achievementsList: {
-      gap: spacing.sm,
+      gap: spacing.md,
     },
     achievementItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: spacing.sm,
+      backgroundColor: colors.warning[50],
+      borderRadius: spacing.lg,
+      padding: spacing.lg,
     },
     achievementIcon: {
-      marginRight: spacing.md,
+      marginRight: spacing.lg,
+      backgroundColor: colors.warning[100],
+      borderRadius: spacing.lg,
+      padding: spacing.sm,
     },
     achievementText: {
       ...typography.textStyles.body.medium,
-      color: colors.text.primary,
+      color: colors.warning[700],
       flex: 1,
+      fontWeight: '600',
     },
     loadingContainer: {
       flex: 1,
@@ -321,6 +372,28 @@ export default function DashboardScreen() {
       ...typography.textStyles.body.large,
       color: colors.text.secondary,
       marginTop: spacing.md,
+    },
+    progressIndicator: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: spacing.sm,
+    },
+    progressBar: {
+      flex: 1,
+      height: 8,
+      backgroundColor: colors.gray[200],
+      borderRadius: spacing.xs,
+      marginRight: spacing.sm,
+      overflow: 'hidden',
+    },
+    progressFill: {
+      height: '100%',
+      borderRadius: spacing.xs,
+    },
+    progressText: {
+      ...typography.textStyles.caption.lg,
+      color: colors.text.secondary,
+      fontWeight: '600',
     },
   });
 
@@ -338,6 +411,25 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.greeting}>Hey {userName}! 👋</Text>
+        <Text style={styles.subtitle}>
+          Ready to level up your digital wellness game?
+        </Text>
+      </View>
+
+      {/* Hero Card */}
+      <Card style={styles.heroCard} padding="none">
+        <Text style={styles.welcomeMessage}>
+          Your journey to digital balance starts here
+        </Text>
+        <Image 
+          source={{ uri: 'https://images.pexels.com/photos/1051838/pexels-photo-1051838.jpeg' }}
+          style={styles.inspirationalImage}
+          resizeMode="cover"
+        />
+      </Card>
+
       <ScrollView 
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
@@ -345,51 +437,55 @@ export default function DashboardScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={styles.header}>
-          <Text style={styles.greeting}>Hello, {userName}!</Text>
-          <Text style={styles.subtitle}>
-            Welcome back to your digital wellness journey
-          </Text>
-        </View>
-
         {/* Stats Overview */}
         {stats && (
           <View style={styles.statsContainer}>
-            <Card style={styles.statCard} padding="medium">
+            <View style={styles.statCard}>
               <Clock color={colors.primary[500]} size={32} style={styles.statIcon} />
               <Text style={styles.statValue}>{formatTime(stats.screenTime.today)}</Text>
               <Text style={styles.statLabel}>Screen Time Today</Text>
               <Text style={styles.statSubtext}>
-                {stats.screenTime.today < stats.screenTime.yesterday ? '↓' : '↑'} vs yesterday
+                {stats.screenTime.today < stats.screenTime.yesterday ? '↓ Improving!' : '↑ vs yesterday'}
               </Text>
-            </Card>
+            </View>
             
-            <Card style={styles.statCard} padding="medium">
+            <View style={styles.statCard}>
               <Zap color={colors.success[500]} size={32} style={styles.statIcon} />
               <Text style={styles.statValue}>{stats.realityChecks.total}</Text>
               <Text style={styles.statLabel}>Reality Checks</Text>
               <Text style={styles.statSubtext}>
                 {stats.realityChecks.thisWeek} this week
               </Text>
-            </Card>
+            </View>
             
-            <Card style={styles.statCard} padding="medium">
+            <View style={styles.statCard}>
               <TrendingUp color={colors.warning[500]} size={32} style={styles.statIcon} />
               <Text style={styles.statValue}>{stats.streak.current}</Text>
               <Text style={styles.statLabel}>Day Streak</Text>
               <Text style={styles.statSubtext}>
                 Best: {stats.streak.longest} days
               </Text>
-            </Card>
+            </View>
             
-            <Card style={styles.statCard} padding="medium">
+            <View style={styles.statCard}>
               <Target color={colors.purple[500]} size={32} style={styles.statIcon} />
               <Text style={styles.statValue}>{stats.goals.progress}%</Text>
               <Text style={styles.statLabel}>Goal Progress</Text>
-              <Text style={styles.statSubtext}>
-                {stats.goals.completed}/{stats.goals.total} completed
-              </Text>
-            </Card>
+              <View style={styles.progressIndicator}>
+                <View style={styles.progressBar}>
+                  <View style={[
+                    styles.progressFill,
+                    { 
+                      backgroundColor: colors.purple[500],
+                      width: `${stats.goals.progress}%`
+                    }
+                  ]} />
+                </View>
+                <Text style={styles.progressText}>
+                  {stats.goals.completed}/{stats.goals.total}
+                </Text>
+              </View>
+            </View>
           </View>
         )}
 
@@ -400,10 +496,13 @@ export default function DashboardScreen() {
             <TouchableOpacity
               key={action.id}
               onPress={action.onPress}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
-              <Card style={styles.actionCard} padding="large">
-                <View style={styles.actionContent}>
+              <Card style={styles.actionCard} padding="none">
+                <View style={[
+                  styles.actionContent,
+                  { backgroundColor: action.gradient[0] + '20' }
+                ]}>
                   <View style={styles.actionIcon}>
                     {action.icon}
                   </View>
@@ -420,13 +519,16 @@ export default function DashboardScreen() {
         {/* Recent Achievements */}
         {stats && stats.achievements.recent.length > 0 && (
           <View style={styles.recentActivity}>
-            <Text style={styles.sectionTitle}>Recent Achievements</Text>
+            <Text style={styles.sectionTitle}>Recent Achievements 🏆</Text>
             <Card padding="large">
               <View style={styles.achievementsList}>
                 {stats.achievements.recent.map((achievement, index) => (
                   <View key={index} style={styles.achievementItem}>
-                    <Award color={colors.warning[500]} size={20} style={styles.achievementIcon} />
+                    <View style={styles.achievementIcon}>
+                      <Award color={colors.warning[600]} size={20} />
+                    </View>
                     <Text style={styles.achievementText}>{achievement}</Text>
+                    <Sparkles color={colors.warning[500]} size={16} />
                   </View>
                 ))}
               </View>

@@ -10,6 +10,7 @@ import {
   TextInput,
   Switch,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme';
@@ -26,7 +27,8 @@ import {
   Shield, 
   Target,
   Zap,
-  Award
+  Award,
+  Leaf
 } from 'lucide-react-native';
 
 export default function OfflineScreen() {
@@ -51,6 +53,25 @@ export default function OfflineScreen() {
   const [showChallengeModal, setShowChallengeModal] = useState(false);
   const [showBlockedAppsModal, setShowBlockedAppsModal] = useState(false);
   const [selectedChallenge, setSelectedChallenge] = useState<any>(null);
+  const [sessionTimer, setSessionTimer] = useState(0);
+
+  // Timer for active session
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (activeSession && !activeSession.end_time) {
+      interval = setInterval(() => {
+        const startTime = new Date(activeSession.start_time);
+        const now = new Date();
+        const diffMs = now.getTime() - startTime.getTime();
+        setSessionTimer(Math.floor(diffMs / 1000));
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [activeSession]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -67,12 +88,15 @@ export default function OfflineScreen() {
     return `${mins}m`;
   };
 
-  const formatDuration = (startTime: string, endTime?: string): string => {
-    const start = new Date(startTime);
-    const end = endTime ? new Date(endTime) : new Date();
-    const diffMs = end.getTime() - start.getTime();
-    const minutes = Math.floor(diffMs / (1000 * 60));
-    return formatTime(minutes);
+  const formatTimer = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleStartSession = async (duration?: number) => {
@@ -80,8 +104,8 @@ export default function OfflineScreen() {
       await startSession(duration);
       Alert.alert(
         '🌿 Time Off Started',
-        'Your offline session has begun. Selected apps are now blocked.',
-        [{ text: 'OK' }]
+        'Your offline session has begun. Selected apps are now blocked. Time to focus on what truly matters!',
+        [{ text: 'Let\'s Go!' }]
       );
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to start session');
@@ -93,18 +117,18 @@ export default function OfflineScreen() {
 
     Alert.alert(
       'End Session',
-      'Are you sure you want to end your offline session?',
+      'Ready to wrap up your offline time?',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Keep Going', style: 'cancel' },
         {
           text: 'End Session',
           onPress: async () => {
             try {
               await endSession();
-              const duration = formatDuration(activeSession.start_time, new Date().toISOString());
+              const durationMinutes = Math.floor(sessionTimer / 60);
               Alert.alert(
                 '🎉 Session Complete!',
-                `Great job! You stayed offline for ${duration}.`,
+                `Amazing! You stayed offline for ${formatTime(durationMinutes)}. You're building incredible focus habits!`,
                 [{ text: 'Awesome!' }]
               );
             } catch (error: any) {
@@ -122,8 +146,8 @@ export default function OfflineScreen() {
       setShowChallengeModal(false);
       Alert.alert(
         '🏆 Challenge Accepted!',
-        `You've joined "${challenge.title}". Good luck!`,
-        [{ text: 'Let\'s Go!' }]
+        `You've joined "${challenge.title}". Ready to level up your focus game?`,
+        [{ text: 'Let\'s Crush It!' }]
       );
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to join challenge');
@@ -156,11 +180,13 @@ export default function OfflineScreen() {
     header: {
       padding: spacing.lg,
       paddingBottom: spacing.md,
+      background: `linear-gradient(135deg, ${colors.success[500]}, ${colors.primary[500]})`,
     },
     title: {
       ...typography.textStyles.heading['2xl'],
       color: colors.text.primary,
       marginBottom: spacing.sm,
+      fontWeight: '800',
     },
     subtitle: {
       ...typography.textStyles.body.large,
@@ -176,6 +202,20 @@ export default function OfflineScreen() {
       ...typography.textStyles.heading.lg,
       color: colors.text.primary,
       marginBottom: spacing.md,
+      fontWeight: '700',
+    },
+    heroCard: {
+      marginHorizontal: spacing.lg,
+      marginTop: -spacing.xl,
+      marginBottom: spacing.lg,
+      backgroundColor: colors.white,
+      borderRadius: spacing.lg,
+      padding: spacing.xl,
+      shadowColor: colors.success[500],
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.15,
+      shadowRadius: 20,
+      elevation: 8,
     },
     statsGrid: {
       flexDirection: 'row',
@@ -187,6 +227,9 @@ export default function OfflineScreen() {
       width: '48%',
       marginBottom: spacing.md,
       alignItems: 'center',
+      backgroundColor: colors.gray[50],
+      borderRadius: spacing.md,
+      padding: spacing.lg,
     },
     statIcon: {
       marginBottom: spacing.sm,
@@ -194,66 +237,85 @@ export default function OfflineScreen() {
     statValue: {
       ...typography.textStyles.heading.lg,
       color: colors.primary[500],
+      fontWeight: '800',
       marginBottom: spacing.xs,
     },
     statLabel: {
       ...typography.textStyles.body.medium,
       color: colors.text.secondary,
       textAlign: 'center',
+      fontWeight: '600',
     },
     activeSessionCard: {
       backgroundColor: colors.success[50],
       borderColor: colors.success[200],
-      borderWidth: 2,
+      borderWidth: 3,
+      borderRadius: spacing.lg,
+      overflow: 'hidden',
     },
     sessionHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: spacing.md,
+      marginBottom: spacing.lg,
     },
     sessionStatus: {
       flexDirection: 'row',
       alignItems: 'center',
     },
     statusDot: {
-      width: 12,
-      height: 12,
-      borderRadius: 6,
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      backgroundColor: colors.success[500],
+      marginRight: spacing.sm,
+    },
+    pulseDot: {
+      width: 16,
+      height: 16,
+      borderRadius: 8,
       backgroundColor: colors.success[500],
       marginRight: spacing.sm,
     },
     sessionStatusText: {
       ...typography.textStyles.body.large,
       color: colors.success[700],
-      fontWeight: '600',
+      fontWeight: '700',
     },
     sessionDuration: {
-      ...typography.textStyles.heading.xl,
+      ...typography.textStyles.display.sm,
       color: colors.success[700],
       textAlign: 'center',
       marginBottom: spacing.lg,
+      fontWeight: '800',
     },
     sessionControls: {
       flexDirection: 'row',
       justifyContent: 'center',
-      gap: spacing.md,
+      gap: spacing.lg,
     },
     controlButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-      borderRadius: spacing.md,
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.lg,
+      borderRadius: spacing.lg,
       backgroundColor: colors.success[500],
+      shadowColor: colors.success[500],
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
     },
     controlButtonSecondary: {
-      backgroundColor: colors.gray[300],
+      backgroundColor: colors.gray[400],
+      shadowColor: colors.gray[400],
     },
     controlButtonText: {
       ...typography.textStyles.button.md,
       color: colors.white,
       marginLeft: spacing.sm,
+      fontWeight: '700',
     },
     startSessionCard: {
       alignItems: 'center',
@@ -266,12 +328,19 @@ export default function OfflineScreen() {
       color: colors.text.primary,
       marginBottom: spacing.sm,
       textAlign: 'center',
+      fontWeight: '700',
     },
     startSessionDescription: {
       ...typography.textStyles.body.medium,
       color: colors.text.secondary,
       textAlign: 'center',
       lineHeight: 22,
+      marginBottom: spacing.lg,
+    },
+    inspirationalImage: {
+      width: '100%',
+      height: 120,
+      borderRadius: spacing.md,
       marginBottom: spacing.lg,
     },
     quickStartButtons: {
@@ -283,11 +352,12 @@ export default function OfflineScreen() {
     quickStartButton: {
       flex: 1,
       marginHorizontal: spacing.xs,
-      paddingVertical: spacing.md,
-      borderRadius: spacing.md,
-      borderWidth: 1,
+      paddingVertical: spacing.lg,
+      borderRadius: spacing.lg,
+      borderWidth: 2,
       borderColor: colors.border.primary,
       alignItems: 'center',
+      backgroundColor: colors.white,
     },
     quickStartButtonActive: {
       backgroundColor: colors.primary[50],
@@ -296,7 +366,7 @@ export default function OfflineScreen() {
     quickStartButtonText: {
       ...typography.textStyles.body.medium,
       color: colors.text.secondary,
-      fontWeight: '500',
+      fontWeight: '700',
     },
     quickStartButtonTextActive: {
       color: colors.primary[500],
@@ -309,6 +379,8 @@ export default function OfflineScreen() {
     challengeCard: {
       width: '48%',
       marginBottom: spacing.md,
+      borderRadius: spacing.lg,
+      overflow: 'hidden',
     },
     challengeHeader: {
       flexDirection: 'row',
@@ -317,12 +389,12 @@ export default function OfflineScreen() {
       marginBottom: spacing.sm,
     },
     challengeDifficulty: {
-      fontSize: 16,
+      fontSize: 20,
     },
     challengeTitle: {
       ...typography.textStyles.body.large,
       color: colors.text.primary,
-      fontWeight: '600',
+      fontWeight: '700',
       marginBottom: spacing.xs,
       flex: 1,
     },
@@ -330,21 +402,25 @@ export default function OfflineScreen() {
       ...typography.textStyles.body.medium,
       color: colors.text.secondary,
       lineHeight: 20,
-      marginBottom: spacing.sm,
+      marginBottom: spacing.md,
     },
     challengeReward: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
+      backgroundColor: colors.gray[50],
+      borderRadius: spacing.md,
+      padding: spacing.sm,
     },
     challengePoints: {
       ...typography.textStyles.caption.lg,
       color: colors.warning[600],
-      fontWeight: '600',
+      fontWeight: '700',
     },
     challengeDuration: {
       ...typography.textStyles.caption.lg,
       color: colors.text.secondary,
+      fontWeight: '600',
     },
     blockedAppsHeader: {
       flexDirection: 'row',
@@ -353,15 +429,17 @@ export default function OfflineScreen() {
       marginBottom: spacing.md,
     },
     manageAppsButton: {
-      paddingHorizontal: spacing.md,
+      paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
-      borderRadius: spacing.md,
+      borderRadius: spacing.lg,
       borderWidth: 1,
       borderColor: colors.border.primary,
+      backgroundColor: colors.white,
     },
     manageAppsText: {
       ...typography.textStyles.caption.lg,
       color: colors.text.secondary,
+      fontWeight: '600',
     },
     blockedAppsList: {
       flexDirection: 'row',
@@ -371,15 +449,16 @@ export default function OfflineScreen() {
     blockedAppChip: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: spacing.sm,
-      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
       backgroundColor: colors.error[100],
-      borderRadius: spacing.md,
+      borderRadius: spacing.lg,
     },
     blockedAppText: {
       ...typography.textStyles.caption.lg,
       color: colors.error[700],
       marginLeft: spacing.xs,
+      fontWeight: '600',
     },
     modalOverlay: {
       flex: 1,
@@ -401,6 +480,7 @@ export default function OfflineScreen() {
       color: colors.text.primary,
       marginBottom: spacing.lg,
       textAlign: 'center',
+      fontWeight: '700',
     },
     modalButtons: {
       flexDirection: 'row',
@@ -423,6 +503,7 @@ export default function OfflineScreen() {
     },
     modalButtonText: {
       ...typography.textStyles.button.md,
+      fontWeight: '700',
     },
     cancelButtonText: {
       color: colors.text.secondary,
@@ -447,7 +528,7 @@ export default function OfflineScreen() {
     appName: {
       ...typography.textStyles.body.medium,
       color: colors.text.primary,
-      fontWeight: '500',
+      fontWeight: '600',
     },
     appIdentifier: {
       ...typography.textStyles.caption.lg,
@@ -471,6 +552,7 @@ export default function OfflineScreen() {
       color: colors.text.primary,
       textAlign: 'center',
       marginBottom: spacing.sm,
+      fontWeight: '700',
     },
     emptyStateText: {
       ...typography.textStyles.body.medium,
@@ -497,9 +579,40 @@ export default function OfflineScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Time Off</Text>
         <Text style={styles.subtitle}>
-          Take breaks from technology and reconnect with the real world
+          Disconnect to reconnect with what matters most
         </Text>
       </View>
+
+      {/* Hero Stats Card */}
+      <Card style={styles.heroCard} padding="none">
+        <View style={styles.statsGrid}>
+          <View style={styles.statCard}>
+            <Clock color={colors.primary[500]} size={32} style={styles.statIcon} />
+            <Text style={styles.statValue}>
+              {formatTime(stats?.total_offline_minutes || 0)}
+            </Text>
+            <Text style={styles.statLabel}>Total Time Off</Text>
+          </View>
+
+          <View style={styles.statCard}>
+            <Target color={colors.success[500]} size={32} style={styles.statIcon} />
+            <Text style={styles.statValue}>{stats?.offline_session_count || 0}</Text>
+            <Text style={styles.statLabel}>Sessions</Text>
+          </View>
+
+          <View style={styles.statCard}>
+            <Zap color={colors.warning[500]} size={32} style={styles.statIcon} />
+            <Text style={styles.statValue}>{stats?.current_offline_streak || 0}</Text>
+            <Text style={styles.statLabel}>Current Streak</Text>
+          </View>
+
+          <View style={styles.statCard}>
+            <Award color={colors.purple[500]} size={32} style={styles.statIcon} />
+            <Text style={styles.statValue}>{stats?.longest_offline_streak || 0}</Text>
+            <Text style={styles.statLabel}>Best Streak</Text>
+          </View>
+        </View>
+      </Card>
 
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
@@ -512,38 +625,6 @@ export default function OfflineScreen() {
           <Text style={styles.errorText}>{error}</Text>
         )}
 
-        {/* Stats Overview */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Progress</Text>
-          <View style={styles.statsGrid}>
-            <Card style={styles.statCard} padding="medium">
-              <Clock color={colors.primary[500]} size={32} style={styles.statIcon} />
-              <Text style={styles.statValue}>
-                {formatTime(stats?.total_offline_minutes || 0)}
-              </Text>
-              <Text style={styles.statLabel}>Total Time Off</Text>
-            </Card>
-
-            <Card style={styles.statCard} padding="medium">
-              <Target color={colors.success[500]} size={32} style={styles.statIcon} />
-              <Text style={styles.statValue}>{stats?.offline_session_count || 0}</Text>
-              <Text style={styles.statLabel}>Sessions Completed</Text>
-            </Card>
-
-            <Card style={styles.statCard} padding="medium">
-              <Zap color={colors.warning[500]} size={32} style={styles.statIcon} />
-              <Text style={styles.statValue}>{stats?.current_offline_streak || 0}</Text>
-              <Text style={styles.statLabel}>Current Streak</Text>
-            </Card>
-
-            <Card style={styles.statCard} padding="medium">
-              <Award color={colors.purple[500]} size={32} style={styles.statIcon} />
-              <Text style={styles.statValue}>{stats?.longest_offline_streak || 0}</Text>
-              <Text style={styles.statLabel}>Best Streak</Text>
-            </Card>
-          </View>
-        </View>
-
         {/* Active Session or Start Session */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Current Session</Text>
@@ -551,15 +632,16 @@ export default function OfflineScreen() {
             <Card style={[styles.activeSessionCard]} padding="large">
               <View style={styles.sessionHeader}>
                 <View style={styles.sessionStatus}>
-                  <View style={styles.statusDot} />
+                  <View style={styles.pulseDot} />
                   <Text style={styles.sessionStatusText}>
-                    {activeSession.end_time ? 'Paused' : 'Active'}
+                    {activeSession.end_time ? 'Paused' : 'Active Session'}
                   </Text>
                 </View>
-                <Text style={styles.sessionDuration}>
-                  {formatDuration(activeSession.start_time, activeSession.end_time)}
-                </Text>
               </View>
+
+              <Text style={styles.sessionDuration}>
+                {formatTimer(sessionTimer)}
+              </Text>
 
               <View style={styles.sessionControls}>
                 {!activeSession.end_time ? (
@@ -602,11 +684,17 @@ export default function OfflineScreen() {
           ) : (
             <Card padding="large" style={styles.startSessionCard}>
               <Leaf color={colors.primary[500]} size={64} style={styles.startSessionIcon} />
-              <Text style={styles.startSessionTitle}>Start Your Time Off</Text>
+              <Text style={styles.startSessionTitle}>Ready for Some Time Off?</Text>
               <Text style={styles.startSessionDescription}>
-                Choose a duration and disconnect from distracting apps. 
-                Focus on what matters most.
+                Choose your focus duration and disconnect from distracting apps. 
+                It's time to be present and productive!
               </Text>
+
+              <Image 
+                source={{ uri: 'https://images.pexels.com/photos/1051838/pexels-photo-1051838.jpeg' }}
+                style={styles.inspirationalImage}
+                resizeMode="cover"
+              />
 
               <View style={styles.quickStartButtons}>
                 <TouchableOpacity
@@ -673,7 +761,7 @@ export default function OfflineScreen() {
                 <Smartphone color={colors.text.secondary} size={48} style={styles.emptyStateIcon} />
                 <Text style={styles.emptyStateTitle}>No Apps Blocked</Text>
                 <Text style={styles.emptyStateText}>
-                  Configure which apps to block during your time off sessions.
+                  Configure which apps to block during your time off sessions for maximum focus.
                 </Text>
               </View>
             )}
@@ -682,7 +770,7 @@ export default function OfflineScreen() {
 
         {/* Challenges */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Challenges</Text>
+          <Text style={styles.sectionTitle}>Focus Challenges</Text>
           {challenges.length > 0 ? (
             <View style={styles.challengesGrid}>
               {challenges.slice(0, 4).map((challenge) => (
@@ -721,7 +809,7 @@ export default function OfflineScreen() {
                 <Trophy color={colors.text.secondary} size={48} style={styles.emptyStateIcon} />
                 <Text style={styles.emptyStateTitle}>No Challenges Available</Text>
                 <Text style={styles.emptyStateText}>
-                  Check back later for new challenges to test your focus.
+                  Check back later for new challenges to level up your focus skills!
                 </Text>
               </View>
             </Card>
@@ -770,7 +858,7 @@ export default function OfflineScreen() {
                 style={[styles.modalButton, styles.joinButton]}
                 onPress={() => selectedChallenge && handleJoinChallenge(selectedChallenge)}
               >
-                <Text style={[styles.modalButtonText, styles.joinButtonText]}>Join Challenge</Text>
+                <Text style={[styles.modalButtonText, styles.joinButtonText]}>Accept Challenge</Text>
               </TouchableOpacity>
             </View>
           </View>
