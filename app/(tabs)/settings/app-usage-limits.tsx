@@ -54,7 +54,7 @@ export default function AppUsageLimitsScreen() {
   }, [settings]);
 
   const handleToggleLimit = (id: string) => {
-    const updatedLimits = appLim its.map(limit => 
+    const updatedLimits = appLimits.map(limit => 
       limit.id === id 
         ? { ...limit, enabled: !limit.enabled }
         : limit
