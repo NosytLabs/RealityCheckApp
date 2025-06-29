@@ -5,12 +5,12 @@ const config = getDefaultConfig(__dirname);
 // Add resolver configuration for better module resolution
 config.resolver.platforms = ['native', 'web', 'ios', 'android'];
 
-// Add resolver alias for react-native-svg web compatibility
+// Ensure proper SVG handling for web
 config.resolver.alias = {
   'react-native-svg': 'react-native-svg/lib/commonjs/ReactNativeSVG.web.js',
 };
 
-// Ensure proper SVG handling
+// Configure SVG transformer
 config.resolver.assetExts = config.resolver.assetExts.filter(ext => ext !== 'svg');
 config.resolver.sourceExts = [...config.resolver.sourceExts, 'svg'];
 
@@ -23,5 +23,13 @@ config.transformer.getTransformOptions = async () => ({
     inlineRequires: true,
   },
 });
+
+// Ensure SVG components are available globally for web
+config.transformer.minifierConfig = {
+  keep_fnames: true,
+  mangle: {
+    keep_fnames: true,
+  },
+};
 
 module.exports = config;
