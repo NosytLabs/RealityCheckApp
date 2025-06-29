@@ -17,7 +17,7 @@
         "./app/*"
       ],
       "@/components/*": [
-        "./components/*"
+        "./app/components/*"
       ],
       "@/hooks/*": [
         "./hooks/*"
@@ -26,16 +26,16 @@
         "./types/*"
       ],
       "@/config/*": [
-        "./config/*"
+        "./app/config/*"
       ],
       "@/services/*": [
-        "./services/*"
+        "./app/services/*"
       ],
       "@/theme/*": [
-        "./theme/*"
+        "./app/theme/*"
       ],
       "@/providers/*": [
-        "./providers/*"
+        "./app/providers/*"
       ]
     }
   },
