@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, Platform } from 'react-native';
 import { supabase, checkSupabaseConnection } from '../lib/supabase';
 import { useApp } from '../providers/AppProvider';
 
@@ -21,22 +21,50 @@ export const useInAppTracking = (): UseInAppTrackingReturn => {
   const [currentSession, setCurrentSession] = useState<InAppSession | null>(null);
   const [totalSessionTime, setTotalSessionTime] = useState(0);
   const [isSupabaseAvailable, setIsSupabaseAvailable] = useState(true);
-  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+  const appStateRef = useRef<AppStateStatus>(Platform.OS === 'web' ? 'active' : AppState.currentState);
 
   useEffect(() => {
     checkSupabaseConnection().then(setIsSupabaseAvailable);
   }, []);
 
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-    return () => subscription?.remove();
+    let subscription: any;
+    let webFocusHandler: (() => void) | null = null;
+    let webBlurHandler: (() => void) | null = null;
+
+    if (Platform.OS === 'web') {
+      // Web platform - use window focus/blur events
+      webFocusHandler = () => handleAppStateChange('active');
+      webBlurHandler = () => handleAppStateChange('background');
+      
+      window.addEventListener('focus', webFocusHandler);
+      window.addEventListener('blur', webBlurHandler);
+      window.addEventListener('beforeunload', webBlurHandler);
+    } else {
+      // Native platforms - use AppState
+      subscription = AppState.addEventListener('change', handleAppStateChange);
+    }
+
+    return () => {
+      if (Platform.OS === 'web') {
+        if (webFocusHandler) window.removeEventListener('focus', webFocusHandler);
+        if (webBlurHandler) {
+          window.removeEventListener('blur', webBlurHandler);
+          window.removeEventListener('beforeunload', webBlurHandler);
+        }
+      } else {
+        subscription?.remove();
+      }
+    };
   }, [currentSession]);
 
   const handleAppStateChange = async (nextAppState: AppStateStatus) => {
-    if (appStateRef.current === 'active' && nextAppState.match(/inactive|background/)) {
+    const currentState = appStateRef.current;
+    
+    if (currentState === 'active' && nextAppState.match(/inactive|background/)) {
       // App going to background - stop tracking
       await stopTracking();
-    } else if (appStateRef.current.match(/inactive|background/) && nextAppState === 'active') {
+    } else if (currentState.match(/inactive|background/) && nextAppState === 'active') {
       // App coming to foreground - resume tracking if we had a session
       if (currentSession) {
         startTracking(currentSession.screenName);

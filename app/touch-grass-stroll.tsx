@@ -8,6 +8,7 @@ import {
   Dimensions,
   AppState,
   AppStateStatus,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -110,10 +111,36 @@ export default function TouchGrassStrollScreen() {
     };
   }, [isActive, isPaused]);
 
-  // Handle app state changes
+  // Handle app state changes with web compatibility
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-    return () => subscription?.remove();
+    let subscription: any;
+    let webFocusHandler: (() => void) | null = null;
+    let webBlurHandler: (() => void) | null = null;
+
+    if (Platform.OS === 'web') {
+      // Web platform - use window focus/blur events
+      webFocusHandler = () => handleAppStateChange('active');
+      webBlurHandler = () => handleAppStateChange('background');
+      
+      window.addEventListener('focus', webFocusHandler);
+      window.addEventListener('blur', webBlurHandler);
+      window.addEventListener('beforeunload', webBlurHandler);
+    } else {
+      // Native platforms - use AppState
+      subscription = AppState.addEventListener('change', handleAppStateChange);
+    }
+
+    return () => {
+      if (Platform.OS === 'web') {
+        if (webFocusHandler) window.removeEventListener('focus', webFocusHandler);
+        if (webBlurHandler) {
+          window.removeEventListener('blur', webBlurHandler);
+          window.removeEventListener('beforeunload', webBlurHandler);
+        }
+      } else {
+        subscription?.remove();
+      }
+    };
   }, [isActive]);
 
   const handleAppStateChange = (nextAppState: AppStateStatus) => {
@@ -169,7 +196,9 @@ export default function TouchGrassStrollScreen() {
     showToast({
       type: 'success',
       title: '🌱 Background Bonus!',
-      message: 'Your plant grows faster when you put your phone down!',
+      message: Platform.OS === 'web' 
+        ? 'Your plant grows faster when you switch to another tab or app!'
+        : 'Your plant grows faster when you put your phone down!',
     });
     
     rewardPulse.value = withSequence(
@@ -258,7 +287,9 @@ export default function TouchGrassStrollScreen() {
       showToast({
         type: 'success',
         title: '🌱 Stroll Started!',
-        message: 'Put your phone down and enjoy the real world!',
+        message: Platform.OS === 'web' 
+          ? 'Switch to another tab or minimize the browser to grow your plant faster!'
+          : 'Put your phone down and enjoy the real world!',
       });
     } catch (error: any) {
       showToast({
@@ -591,7 +622,13 @@ export default function TouchGrassStrollScreen() {
     },
   });
 
-  const tips = [
+  const tips = Platform.OS === 'web' ? [
+    "🌱 Switch to another tab for bonus growth",
+    "🌸 Your plant grows faster when you minimize the browser",
+    "🌳 Take a real walk outside for maximum benefits",
+    "🌺 Each minute offline earns you seeds",
+    "🌲 Unlock new plants by spending more time offline",
+  ] : [
     "🌱 Put your phone face down for bonus growth",
     "🌸 Your plant grows faster in background mode",
     "🌳 Take a real walk outside for maximum benefits",
