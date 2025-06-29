@@ -1,4 +1,4 @@
-import 'react-native-svg';
+import Svg from 'react-native-svg';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
@@ -15,6 +15,11 @@ import { AppProvider } from '../providers/AppProvider';
 import { ThemeProvider } from '../theme';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { ToastProvider } from '../components/common/Toast';
+
+// Make Svg globally available for web platform
+if (typeof window !== 'undefined') {
+  (window as any).Svg = Svg;
+}
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
