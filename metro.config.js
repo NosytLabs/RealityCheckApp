@@ -7,7 +7,7 @@ config.resolver.platforms = ['native', 'web', 'ios', 'android'];
 
 // Configure aliases for web compatibility
 config.resolver.alias = {
-  'react-native-svg': 'react-native-svg/lib/commonjs/ReactNativeSVG.web.js',
+  'react-native-svg': 'react-native-svg/lib/module/ReactNativeSVG.web.js',
   // Add path polyfill for web
   'path': 'path-browserify',
 };
