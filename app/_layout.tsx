@@ -2,6 +2,7 @@ import 'react-native-web';
 import 'react-native-svg';
 import 'path-browserify';
 import * as Svg from 'react-native-svg';
+import * as path from 'path-browserify';
 import { Platform } from 'react-native';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useEffect } from 'react';
@@ -20,11 +21,13 @@ import { ThemeProvider } from '../theme';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { ToastProvider } from '../components/common/Toast';
 
-// Expose Svg globally for web platform
+// Expose Svg and Path globally for web platform
 if (Platform.OS === 'web') {
   (global as any).Svg = Svg;
+  (global as any).Path = path;
   if (typeof window !== 'undefined') {
     (window as any).Svg = Svg;
+    (window as any).Path = path;
   }
 }
 
