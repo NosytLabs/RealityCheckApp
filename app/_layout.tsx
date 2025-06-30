@@ -1,6 +1,8 @@
 import 'react-native-web';
 import 'react-native-svg';
 import 'path-browserify';
+import * as Svg from 'react-native-svg';
+import { Platform } from 'react-native';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
@@ -17,6 +19,14 @@ import { AppProvider } from '../providers/AppProvider';
 import { ThemeProvider } from '../theme';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { ToastProvider } from '../components/common/Toast';
+
+// Expose Svg globally for web platform
+if (Platform.OS === 'web') {
+  (global as any).Svg = Svg;
+  if (typeof window !== 'undefined') {
+    (window as any).Svg = Svg;
+  }
+}
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
