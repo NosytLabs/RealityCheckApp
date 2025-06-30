@@ -1,4 +1,5 @@
 import 'react-native-web';
+import 'react-native-svg';
 import 'path-browserify';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useEffect } from 'react';
