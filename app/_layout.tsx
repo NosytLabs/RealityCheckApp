@@ -1,4 +1,4 @@
-import { useFrameworkReady } from '@/hooks/useFrameworkReady'import { useFrameworkReady } from '@/hooks/useFrameworkReady';
+import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import 'react-native-web';
 import 'react-native-svg';
 import 'path-browserify';
@@ -21,7 +21,7 @@ import { ThemeProvider } from '../theme';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { ToastProvider } from '../components/common/Toast';
 
-// Expose Svg and Path globally for web platform
+// Expose Svg and Path globally for web platform - moved to module scope
 if (Platform.OS === 'web') {
   (global as any).Svg = Svg;
   (global as any).Path = path;
