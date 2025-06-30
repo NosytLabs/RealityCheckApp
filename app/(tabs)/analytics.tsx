@@ -576,7 +576,7 @@ export default function AnalyticsScreen() {
               </View>
 
               {/* In-App Usage Breakdown */}
-              {analyticsData.inAppUsage.totalMinutes > 0 && (
+              {analyticsData.inAppUsage && analyticsData.inAppUsage.totalMinutes > 0 && (
                 <View style={styles.inAppUsageContainer}>
                   <Text style={styles.inAppUsageTitle}>
                     📱 RealityCheck Usage: {Math.floor(analyticsData.inAppUsage.totalMinutes / 60)}h {analyticsData.inAppUsage.totalMinutes % 60}m
