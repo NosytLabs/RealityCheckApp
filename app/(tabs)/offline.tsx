@@ -331,7 +331,6 @@ export default function OfflineScreen() {
       marginBottom: spacing.sm,
       textAlign: 'center',
       fontWeight: '700',
-    
     },
     startSessionDescription: {
       ...typography.textStyles.body.medium,
