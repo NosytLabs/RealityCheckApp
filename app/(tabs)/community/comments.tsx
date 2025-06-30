@@ -18,7 +18,7 @@ import { useApp } from '../../../providers/AppProvider';
 import { useToast } from '../../../components/common/Toast';
 import { useInAppTracking } from '@/hooks/useInAppTracking';
 import { supabase, checkSupabaseConnection } from '../../../lib/supabase';
-import { ArrowLeft, Send, Clock, Heart, MoreVertical } from 'lucide-react-native';
+import { ArrowLeft, Send, Clock, Heart, MoveVertical as MoreVertical } from 'lucide-react-native';
 
 interface Comment {
   id: string;
