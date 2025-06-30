@@ -10,9 +10,10 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../theme';
-import { useAchievements } from '../../hooks/useAchievements';
-import { useInAppTracking } from '../../hooks/useInAppTracking';
+import { useAchievements } from '@/hooks/useAchievements';
+import { useInAppTracking } from '@/hooks/useInAppTracking';
 import { Card } from '../../components/common/Card';
 import { 
   Award, 
@@ -104,10 +105,11 @@ export default function AchievementsScreen() {
       flex: 1,
       backgroundColor: colors.background.primary,
     },
-    header: {
-      padding: spacing.lg,
+    headerContainer: {
       paddingBottom: spacing.md,
-      background: `linear-gradient(135deg, ${colors.warning[500]}, ${colors.primary[500]})`,
+    },
+    headerContent: {
+      padding: spacing.lg,
     },
     title: {
       ...typography.textStyles.heading['2xl'],
@@ -399,12 +401,19 @@ export default function AchievementsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Achievements</Text>
-        <Text style={styles.subtitle}>
-          Unlock rewards and level up your digital wellness journey
-        </Text>
-      </View>
+      <LinearGradient
+        colors={[colors.warning[500], colors.primary[500]]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerContainer}
+      >
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>Achievements</Text>
+          <Text style={styles.subtitle}>
+            Unlock rewards and level up your digital wellness journey
+          </Text>
+        </View>
+      </LinearGradient>
 
       {/* Level Progress Card */}
       <Card style={styles.heroCard} padding="none">

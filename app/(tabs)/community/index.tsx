@@ -11,9 +11,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../../theme';
-import { useCommunity } from '../../../hooks/useCommunity';
-import { useInAppTracking } from '../../../hooks/useInAppTracking';
+import { useCommunity } from '@/hooks/useCommunity';
+import { useInAppTracking } from '@/hooks/useInAppTracking';
 import { useToast } from '../../../components/common/Toast';
 import { Card } from '../../../components/common/Card';
 import { Button } from '../../../components/common/Button';
@@ -122,10 +123,11 @@ export default function CommunityScreen() {
       flex: 1,
       backgroundColor: colors.background.primary,
     },
-    header: {
-      padding: spacing.lg,
+    headerContainer: {
       paddingBottom: spacing.md,
-      background: `linear-gradient(135deg, ${colors.blue[500]}, ${colors.primary[500]})`,
+    },
+    headerContent: {
+      padding: spacing.lg,
     },
     title: {
       ...typography.textStyles.heading['2xl'],
@@ -378,12 +380,19 @@ export default function CommunityScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Community</Text>
-        <Text style={styles.subtitle}>
-          Connect with others on their digital wellness journey
-        </Text>
-      </View>
+      <LinearGradient
+        colors={[colors.blue[500], colors.primary[500]]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerContainer}
+      >
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>Community</Text>
+          <Text style={styles.subtitle}>
+            Connect with others on their digital wellness journey
+          </Text>
+        </View>
+      </LinearGradient>
 
       {/* Community Stats Card */}
       <Card style={styles.heroCard} padding="none">
