@@ -1,7 +1,7 @@
-import 'react-native-web';
+import { useFrameworkReady } from '@/hooks/useFrameworkReady'import 'react-native-web';
 import 'react-native-svg';
 import 'path-browserify';
-import * as Svg from 'react-native-svg';
+import Svg from 'react-native-svg';
 import * as path from 'path-browserify';
 import { Platform } from 'react-native';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
