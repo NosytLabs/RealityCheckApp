@@ -5,17 +5,6 @@ module.exports = function(api) {
     plugins: [
       'react-native-reanimated/plugin',
       '@babel/plugin-transform-export-namespace-from',
-      [
-        '@svgr/babel-plugin-transform-react-native-svg',
-        {
-          "svgoConfig": {
-            "plugins": [
-              { "removeDimensions": true },
-              { "removeViewBox": false }
-            ]
-          }
-        }
-      ]
     ],
     env: {
       production: {

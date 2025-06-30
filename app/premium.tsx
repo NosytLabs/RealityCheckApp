@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../theme';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
@@ -65,7 +66,7 @@ export default function PremiumScreen() {
       flex: 1,
       backgroundColor: colors.background.primary,
     },
-    header: {
+    headerContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -73,7 +74,10 @@ export default function PremiumScreen() {
       paddingVertical: spacing.md,
       borderBottomWidth: 1,
       borderBottomColor: colors.border.primary,
-      background: `linear-gradient(135deg, ${colors.primary[500]}, ${colors.secondary[500]})`,
+    },
+    headerContent: {
+      flex: 1,
+      alignItems: 'center',
     },
     closeButton: {
       padding: spacing.sm,
@@ -329,16 +333,23 @@ export default function PremiumScreen() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <LinearGradient
+        colors={[colors.primary[500], colors.secondary[500]]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerContainer}
+      >
         <TouchableOpacity 
           style={styles.closeButton} 
           onPress={() => router.back()}
         >
           <X color={colors.text.primary} size={24} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Premium Features</Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Premium Features</Text>
+        </View>
         <View style={styles.placeholder} />
-      </View>
+      </LinearGradient>
 
       <ScrollView 
         contentContainerStyle={styles.scrollContainer}

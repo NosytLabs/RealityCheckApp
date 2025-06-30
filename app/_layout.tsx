@@ -1,6 +1,5 @@
 import 'react-native-web';
 import 'path-browserify';
-import Svg from 'react-native-svg';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
@@ -17,21 +16,6 @@ import { AppProvider } from '../providers/AppProvider';
 import { ThemeProvider } from '../theme';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { ToastProvider } from '../components/common/Toast';
-
-// Make Svg and Path globally available for web platform
-if (typeof window !== 'undefined') {
-  (window as any).Svg = Svg;
-  // Polyfill Path for web
-  if (!(window as any).Path) {
-    try {
-      const pathBrowserify = require('path-browserify');
-      (window as any).Path = pathBrowserify;
-      (window as any).path = pathBrowserify;
-    } catch (e) {
-      console.warn('Failed to load path polyfill:', e);
-    }
-  }
-}
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();

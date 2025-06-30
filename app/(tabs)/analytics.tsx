@@ -11,9 +11,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LineChart } from 'react-native-chart-kit';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../theme';
-import { useAnalytics } from '../../hooks/useAnalytics';
-import { useInAppTracking } from '../../hooks/useInAppTracking';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { useInAppTracking } from '@/hooks/useInAppTracking';
 import { Card } from '../../components/common/Card';
 import { ExternalUsageModal } from '../../components/modals/ExternalUsageModal';
 import { TrendingUp, TrendingDown, Target, Zap, Award, Plus, Clock } from 'lucide-react-native';
@@ -83,10 +84,11 @@ export default function AnalyticsScreen() {
       ...typography.textStyles.body.large,
       color: colors.text.primary,
     },
-    header: {
-      padding: spacing.lg,
+    headerContainer: {
       paddingBottom: spacing.md,
-      background: `linear-gradient(135deg, ${colors.primary[500]}, ${colors.primary[600]})`,
+    },
+    headerContent: {
+      padding: spacing.lg,
     },
     title: {
       ...typography.textStyles.heading['2xl'],
@@ -423,10 +425,17 @@ export default function AnalyticsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Your Digital Journey</Text>
-          <Text style={styles.subtitle}>Insights that empower your wellness</Text>
-        </View>
+        <LinearGradient
+          colors={[colors.primary[500], colors.primary[600]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerContainer}
+        >
+          <View style={styles.headerContent}>
+            <Text style={styles.title}>Your Digital Journey</Text>
+            <Text style={styles.subtitle}>Insights that empower your wellness</Text>
+          </View>
+        </LinearGradient>
 
         {error && (
           <Text style={styles.errorText}>{error}</Text>

@@ -11,8 +11,9 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../theme';
-import { useGoals } from '../../hooks/useGoals';
+import { useGoals } from '@/hooks/useGoals';
 import { useToast } from '../../components/common/Toast';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -304,10 +305,11 @@ export default function GoalsScreen() {
       flex: 1,
       backgroundColor: colors.background.primary,
     },
-    header: {
-      padding: spacing.lg,
+    headerContainer: {
       paddingBottom: spacing.md,
-      background: `linear-gradient(135deg, ${colors.primary[500]}, ${colors.secondary[500]})`,
+    },
+    headerContent: {
+      padding: spacing.lg,
     },
     title: {
       ...typography.textStyles.heading['2xl'],
@@ -654,12 +656,19 @@ export default function GoalsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Your Goals</Text>
-        <Text style={styles.subtitle}>
-          Turn dreams into achievements, one goal at a time
-        </Text>
-      </View>
+      <LinearGradient
+        colors={[colors.primary[500], colors.secondary[500]]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerContainer}
+      >
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>Your Goals</Text>
+          <Text style={styles.subtitle}>
+            Turn dreams into achievements, one goal at a time
+          </Text>
+        </View>
+      </LinearGradient>
 
       {/* Hero Card */}
       <Card style={styles.heroCard} padding="none">

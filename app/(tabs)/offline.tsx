@@ -13,8 +13,9 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../theme';
-import { useOfflineTracking } from '../../hooks/useOfflineTracking';
+import { useOfflineTracking } from '@/hooks/useOfflineTracking';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { 
@@ -177,10 +178,11 @@ export default function OfflineScreen() {
       flex: 1,
       backgroundColor: colors.background.primary,
     },
-    header: {
-      padding: spacing.lg,
+    headerContainer: {
       paddingBottom: spacing.md,
-      background: `linear-gradient(135deg, ${colors.success[500]}, ${colors.primary[500]})`,
+    },
+    headerContent: {
+      padding: spacing.lg,
     },
     title: {
       ...typography.textStyles.heading['2xl'],
@@ -329,6 +331,7 @@ export default function OfflineScreen() {
       marginBottom: spacing.sm,
       textAlign: 'center',
       fontWeight: '700',
+    
     },
     startSessionDescription: {
       ...typography.textStyles.body.medium,
@@ -576,12 +579,19 @@ export default function OfflineScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Time Off</Text>
-        <Text style={styles.subtitle}>
-          Disconnect to reconnect with what matters most
-        </Text>
-      </View>
+      <LinearGradient
+        colors={[colors.success[500], colors.primary[500]]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerContainer}
+      >
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>Time Off</Text>
+          <Text style={styles.subtitle}>
+            Disconnect to reconnect with what matters most
+          </Text>
+        </View>
+      </LinearGradient>
 
       {/* Hero Stats Card */}
       <Card style={styles.heroCard} padding="none">

@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../theme';
 import { useApp } from '../../providers/AppProvider';
-import { useInAppTracking } from '../../hooks/useInAppTracking';
+import { useInAppTracking } from '@/hooks/useInAppTracking';
 import { useToast } from '../../components/common/Toast';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -238,10 +239,11 @@ export default function DashboardScreen() {
     scrollContainer: {
       padding: spacing.lg,
     },
-    header: {
-      padding: spacing.lg,
+    headerContainer: {
       paddingBottom: spacing.md,
-      background: `linear-gradient(135deg, ${colors.primary[500]}, ${colors.secondary[500]})`,
+    },
+    headerContent: {
+      padding: spacing.lg,
     },
     greeting: {
       ...typography.textStyles.heading['2xl'],
@@ -464,12 +466,19 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.greeting}>Hey {userName}! 👋</Text>
-        <Text style={styles.subtitle}>
-          Ready to level up your digital wellness game?
-        </Text>
-      </View>
+      <LinearGradient
+        colors={[colors.primary[500], colors.secondary[500]]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerContainer}
+      >
+        <View style={styles.headerContent}>
+          <Text style={styles.greeting}>Hey {userName}! 👋</Text>
+          <Text style={styles.subtitle}>
+            Ready to level up your digital wellness game?
+          </Text>
+        </View>
+      </LinearGradient>
 
       {/* Hero Card */}
       <Card style={styles.heroCard} padding="none">
